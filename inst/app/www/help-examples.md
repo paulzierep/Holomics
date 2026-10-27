@@ -4,9 +4,13 @@ These plots are **real computations on the bundled synthetic three-omics dataset
 
 ## Quick start and input selection
 
-1. Open **Quick start → Load complete example**. This loads the three layers, labels and covariate metadata together. If metadata or Example_ blocks already exist, confirm replacement first; other blocks are retained.
-2. In **Project & data → Sample metadata**, review column types and reference levels. Use **Apply metadata types and references** to save edits. For your own data, **Use as class labels** makes a metadata column available to PCA / PLS-DA / DIABLO without a second upload.
-3. Choose the `Example_` blocks and **Example labels** in legacy analysis tabs. In DA, choose the metadata column `Group` instead of the legacy class table.
+1. Go to **Project & data → Load example data** and pick one of:
+   - **Load all example data (continuous)** — transformed demo values for PCA/PLS/DIABLO/limma/linear models
+   - **Load example data (raw counts)** — integer counts for DESeq2/edgeR/ANCOM-BC2/ComBat-seq
+   - **Load example data (relative abundance)** — fractions summing to 1 for compositional approaches
+   This loads the omics blocks, labels/metadata together.
+2. In **Project & data → Sample metadata**, review column types and reference levels.
+3. Labels are auto-loaded from metadata as **Metadata labels** for PCA/PLS-DA/DIABLO.
 4. The example contains 36 samples: 12 Control, 12 Treatment_A, 12 Treatment_B; 60 transcript, 40 protein and 30 metabolite features.
 
 | Your input | Suitable starting points | Do not do this |

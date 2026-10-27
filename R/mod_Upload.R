@@ -23,10 +23,12 @@ mod_Upload_ui <- function(id){
     fluidRow(
       bs4Dash::column(width = 12,
                       bs4Dash::box(title = "Load example data", width = 12, collapsed = FALSE,
-                                   actionButton(ns("load_example_all"), "Load all example data"),
+                                   actionButton(ns("load_example_all"), "Load all example data (continuous)"),
+                                   actionButton(ns("load_example_counts"), "Load example data (raw counts)"),
+                                   actionButton(ns("load_example_relative"), "Load example data (relative abundance)"),
                                    actionButton(ns("load_example_omics"), "Load example omics data"),
                                    actionButton(ns("load_example_labels"), "Load example labels / metadata"),
-                                   helpText("Load all example data loads the three omics blocks, class labels and full sample metadata (Group, age, sex, batch, subject_id) together.")
+                                   helpText("Choose the data type appropriate for your analysis. Counts are for DESeq2/edgeR/ANCOM-BC2; continuous/transformed for limma/linear models; relative for compositional approaches.")
                       )
       )
     ),
@@ -345,14 +347,20 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
       })
     })
 
-    upload_example_omics <- function() {
+    upload_example_omics <- function(type = "continuous") {
       directory <- system.file("extdata", "three-omics", package = "Holomics")
-      for (name in c("transcriptomics", "proteomics", "metabolomics")) {
-        data <- galaxy_read_table(file.path(directory, paste0(name, ".tsv")))
-        block_name <- paste0("Example_", name)
+      files <- switch(type,
+        counts = c("counts/counts.tsv", "counts/counts.tsv", "counts/counts.tsv"),
+        relative = c("relative/relative.tsv", "relative/relative.tsv", "relative/relative.tsv"),
+        c("transcriptomics.tsv", "proteomics.tsv", "metabolomics.tsv")
+      )
+      names_list <- c("transcriptomics", "proteomics", "metabolomics")
+      for (i in seq_along(names_list)) {
+        data <- galaxy_read_table(file.path(directory, files[i]))
+        block_name <- paste0("Example_", type, "_", names_list[i])
         if (!is.null(singleData)) singleData$data[[block_name]] <- list(omicsData = data, name = block_name)
         if (!is.null(multiData)) multiData$data[[block_name]] <- list(omicsData = data, name = block_name)
-        tables$data <- extendDataTable(tables$data, block_name, paste0(name, ".tsv"), nrow(data), ncol(data), FALSE, "both", block_name)
+        tables$data <- extendDataTable(tables$data, block_name, basename(files[i]), nrow(data), ncol(data), FALSE, "both", block_name)
       }
     }
 
@@ -381,7 +389,13 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
     }
 
     observeEvent(input$load_example_omics, {
-      tryCatch(upload_example_omics(), error = function(e) getShinyErrorAlert(paste("Example omics load failed:", conditionMessage(e))))
+      tryCatch(upload_example_omics("continuous"), error = function(e) getShinyErrorAlert(paste("Example omics load failed:", conditionMessage(e))))
+    })
+    observeEvent(input$load_example_counts, {
+      tryCatch({ upload_example_omics("counts"); upload_example_labels(); upload_example_metadata(metadata) }, error = function(e) getShinyErrorAlert(paste("Example counts load failed:", conditionMessage(e))))
+    })
+    observeEvent(input$load_example_relative, {
+      tryCatch({ upload_example_omics("relative"); upload_example_labels(); upload_example_metadata(metadata) }, error = function(e) getShinyErrorAlert(paste("Example relative load failed:", conditionMessage(e))))
     })
     observeEvent(input$load_example_labels, {
       tryCatch({
@@ -391,7 +405,7 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
     })
     observeEvent(input$load_example_all, {
       tryCatch({
-        upload_example_omics()
+        upload_example_omics("continuous")
         upload_example_labels()
         upload_example_metadata(metadata)
       }, error = function(e) getShinyErrorAlert(paste("All example data load failed:", conditionMessage(e))))
