@@ -102,6 +102,27 @@ tuning, so its tuned checks are not accepted. v6 reads the typed input key
 correctly and explicitly reselects DIABLO blocks before its original/tuned
 checks. This run is still pending, not counted as completed acceptance.
 
+### v6 browser acceptance — completed
+
+The focused campaign completed with **38/38 real-browser checks passed**
+(exit 0): example load/reload, component-budget changes verified in Shiny,
+original sample/correlation/loading plots for all four main models, all four
+actual tuning buttons and visible fitted parameters, and original plus actual
+tuned CIM for **both sPLS and DIABLO**. Clicked original/tuned CIM PNG and CSV
+downloads passed signature/readability checks. Evidence:
+`tests/browser-evidence-v6/results.json` and per-case screenshots/downloads.
+An updated action-sampled headless video is available at
+`tests/browser-evidence-v6/representative-clicks.mp4`; it is not real-time video.
+
+This supersedes the failed focused v5 checks, not the remaining exhaustive-
+coverage gaps. PCA/PLS-DA tuned plots, all CIM parameter interactions, Advanced
+browser routes and live Galaxy delivery are not certified by these 38 cases.
+
+After v6 completed and no test processes remained, the preview package was
+reinstalled from the checkout through `ba673df` and the `omicsharbor` container
+restarted. Advanced fixes are now installed; browser acceptance of those
+Advanced routes still requires a separate campaign.
+
 Tuned-state checks now explicitly cover changed data, component counts, sPLS
 mode and DIABLO coupling as well as scaling and class labels; all pass.
 
