@@ -11,6 +11,8 @@ docker exec omicsharbor Rscript /opt/Holomics/tests/da-matrix.R
 docker exec omicsharbor Rscript /opt/Holomics/tests/regression.R
 docker exec omicsharbor Rscript /opt/Holomics/tests/ui-identifiers.R
 docker exec omicsharbor Rscript /opt/Holomics/tests/tuned-state.R
+docker exec omicsharbor Rscript /opt/Holomics/tests/advanced-methods.R
+docker exec omicsharbor Rscript /opt/Holomics/tests/advanced-outputs.R
 docker exec -e TEST_METHOD=PCA omicsharbor Rscript /opt/Holomics/tests/tuning.R
 docker exec -e TEST_METHOD=PLSDA omicsharbor Rscript /opt/Holomics/tests/tuning.R
 docker exec -e TEST_METHOD=sPLS omicsharbor Rscript /opt/Holomics/tests/tuning.R
@@ -34,12 +36,20 @@ python3 tests/browser_routes.py
   use container IDs distinct from their nested inputs. Real-browser tests
   remain necessary: server output tests alone missed the duplicate-ID bug.
 - `tuned-state.R`: all four main models invalidate tuned results when scaling
-  or labels change; component/mode/design changes also participate in their
-  invalidation dependencies.
+  or labels change; component, data, sPLS mode and DIABLO design changes are
+  also explicitly tested.
+- `advanced-methods.R`: catalog-wide default backend fits with finite loadings
+  and fitted-model RDS round trips. Synthetic stratified study labels exercise
+  MINT's API shape, not genuine independent-cohort predictive validation.
+- `advanced-outputs.R`: real module rendering and readable PDF/TSV/RDS exports
+  across the catalog, including named/group-ellipse score plots. This sources
+  the fit sweep first; it does not certify all finite parameter combinations.
 - `browser_routes.py`: headless real-button/navigation/download campaign;
   select inputs use the widget API. Screenshots, control inventory, logs and
   per-case results are retained under ignored `browser-evidence*/` directories.
   Frames are an action-sampled record, not a real-time screen recording.
+  Use `TUNING_ONLY=1 BROWSER_EVIDENCE=browser-evidence-<run>` for a focused
+  tuning campaign without repeating the DA matrix.
 
 ## Known coverage limits
 

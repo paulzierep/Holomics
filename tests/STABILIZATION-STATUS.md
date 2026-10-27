@@ -50,6 +50,61 @@ including **CIM**. It stopped at a harness-only sidebar locator before PCA;
 the locator has been corrected and v4 is running. No claim of browser tuning
 acceptance is made from v3.
 
+### v4 follow-up (completed, not accepted)
+
+v4 recorded 48 PASS / 8 FAIL, but its two tuning-to-CIM passes were not
+specific to the tuned output and are **not acceptance evidence**. All four
+tuned-parameter checks read hidden text inside collapsed panels. The PCA
+screenshot confirms a reduced result with nine components; persistent
+notifications also intercepted sPLS download clicks. DIABLO tuned downloads
+remain unexplained pending a stricter rerun.
+
+The v5 harness explicitly opens collapsed parameter panels, verifies the
+component-budget value received by Shiny, navigates using each plot's exact
+output ID (including `.tuned`), dismisses notifications via their close buttons,
+and checks downloaded PNG signatures / readable CSV rows. A tuning-focused
+campaign is running against the package reinstalled through `e61cc1e`.
+
+### Advanced catalog backend sweep
+
+The initial sweep passed 17/21 fits and exposed missing `indY` in four
+continuous block methods. The implementation now explicitly uses the last
+selected block as response Y and documents this convention in the UI.
+The rerun passed **all 21 catalog fits**, with finite populated loadings and
+fitted-model RDS round trips. MINT study assignments are synthetic stratified
+fixtures: these test the software interface, not independent-cohort validity.
+Catalog-wide reactive plot/PDF/table/model export tests are running separately.
+
+That output sweep exposed a shared Scores renderer defect: it passed a raw
+score matrix to mixOmics' model-dispatched `plotIndiv()`. Scores now render
+the chosen fitted block's coordinates directly, with optional sample labels
+and group ellipses. A sweep printed passes for all 21 plot/export cases but
+ended with a parse error because its script was edited during execution; that
+run is **not counted as a clean pass**. The unchanged final script is being
+rerun. Do not edit running scripts, just as package installs/restarts must not
+overlap active tests.
+
+The final unchanged rerun completed successfully (exit 0): **21/21 backend
+fits and 21/21 module plot/export cases passed**, including score labels and
+group ellipses, all offered default plot types, PDF signatures, readable
+loading TSVs and model RDS round trips. The 26 existing plot/export regression
+cases and eight dynamic-selector checks also passed again. These are source-
+based reactive tests; the live preview still has the pre-Advanced-fix package
+until a safe reinstall after the active browser campaign.
+
+### v5 browser follow-up
+
+The stricter v5 run confirmed actual sPLS tuned CIM and clicked PNG/CSV exports,
+and visible fitted parameters for PCA/PLS-DA/sPLS. Four component-budget checks
+used the wrong client-side typed-input key despite correctly changing the
+visible numeric control. DIABLO's dataset selector had become empty before
+tuning, so its tuned checks are not accepted. v6 reads the typed input key
+correctly and explicitly reselects DIABLO blocks before its original/tuned
+checks. This run is still pending, not counted as completed acceptance.
+
+Tuned-state checks now explicitly cover changed data, component counts, sPLS
+mode and DIABLO coupling as well as scaling and class labels; all pass.
+
 ## Execution caveats
 
 Two attempted test launches overlapped package installation and failed loading

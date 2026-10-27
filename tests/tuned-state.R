@@ -30,5 +30,25 @@ for (method in c("PCA", "PLSDA", "sPLS", "DIABLO")) {
     session$flushReact()
     stopifnot(!active())
     cat("PASS tuned-state invalidation", method, "scale and labels\n")
+    active(TRUE)
+    session$setInputs(ncomp = 1)
+    stopifnot(!active())
+    if (method == "sPLS") {
+      active(TRUE)
+      session$setInputs(mode = "canonical")
+      stopifnot(!active())
+    }
+    if (method == "DIABLO") {
+      active(TRUE)
+      session$setInputs(matrix = 0.5)
+      stopifnot(!active())
+    }
+    active(TRUE)
+    if (method == "sPLS") selection$dataX <- X + 2
+    else if (method == "DIABLO") selection$data <- list(X = X + 2, Y = X + 1)
+    else selection$data <- list(omicsData = X + 2)
+    session$flushReact()
+    stopifnot(!active())
+    cat("PASS tuned-state invalidation", method, "components, data and method settings\n")
   })
 }

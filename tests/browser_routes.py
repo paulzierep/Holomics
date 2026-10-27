@@ -2,6 +2,7 @@
 import json
 import time
 import os
+import csv
 from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -43,6 +44,12 @@ def click(selector):
     element.click()
     idle()
 
+def dismiss_notifications():
+    for button in driver.find_elements(By.CSS_SELECTOR, '.shiny-notification-close'):
+        if button.is_displayed():
+            button.click()
+    idle()
+
 def tab(name):
     # Expand the real sidebar menu where necessary.
     if name in ("PCA", "PLSDA"):
@@ -61,18 +68,29 @@ def select(id_, values):
     idle()
 
 def download(id_):
+    dismiss_notifications()
     before = {p: p.stat().st_mtime_ns for p in downloads.iterdir()}
     click(f'[id="{id_}"]')
     paths = wait.until(lambda d: [p for p in downloads.iterdir() if p.suffix != '.crdownload' and p.stat().st_mtime_ns != before.get(p)])
     assert all(p.stat().st_size > 100 for p in paths), "Empty download"
+    for path in paths:
+        if path.suffix.lower() == '.png':
+            assert path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'), f"Invalid PNG: {path}"
+        elif path.suffix.lower() == '.csv':
+            with path.open() as stream:
+                rows = list(csv.reader(stream, delimiter=';'))
+            assert len(rows) > 1 and len(rows[0]) > 1, f"Invalid CSV: {path}"
 
 def plot_tab(route, title, tuned=False):
-    anchors = [e for e in driver.find_elements(By.CSS_SELECTOR, f'#shiny-tab-{route} a[data-toggle="tab"]') if e.is_displayed() and e.text == title]
-    anchor = anchors[-1] if tuned else anchors[0]
+    output_name = {"Sample plot": "Indiv", "Correlation circle plot": "Var", "Loading plot": "Load", "CIM": "Img", "Arrow plot": "Arrow", "Circos plot": "Circos"}[title]
+    output_id = f"{route}-{output_name}" + (".tuned" if tuned else "")
+    plot = driver.find_element(By.ID, output_id)
+    pane = plot.find_element(By.XPATH, './ancestor::div[contains(concat(" ",normalize-space(@class)," ")," tab-pane ")][1]')
+    anchor = next(e for e in driver.find_elements(By.CSS_SELECTOR, f'a[href="#{pane.get_attribute("id")}"]') if e.is_displayed())
     driver.execute_script("arguments[0].scrollIntoView({block:'center'})", anchor)
     anchor.click()
     idle()
-    images = wait.until(lambda d: [e for e in d.find_elements(By.CSS_SELECTOR, f'#shiny-tab-{route} .shiny-plot-output img') if e.is_displayed()])
+    images = wait.until(lambda d: [e for e in d.find_element(By.ID, output_id).find_elements(By.TAG_NAME, 'img') if e.is_displayed() and d.execute_script("return arguments[0].naturalWidth > 0", e)])
     assert all(driver.execute_script("return arguments[0].naturalWidth", e) > 0 for e in images)
 
 def errors():
@@ -86,7 +104,8 @@ def check(name, action):
             raise AssertionError("; ".join(failure))
         status, message = "PASS", ""
     except Exception as exc:
-        status, message = "FAIL", str(exc)
+        status, message = "FAIL", f"{type(exc).__name__}: {exc}"
+        (OUT / f"{len(results):03d}-failure.html").write_text(driver.page_source)
     driver.save_screenshot(str(OUT / f"{len(results):03d}.png"))
     results.append(dict(case=name, status=status, error=message))
     (OUT / "results.json").write_text(json.dumps(results, indent=2))
@@ -97,10 +116,15 @@ try:
     idle()
     # Inventory includes hidden controls and the active route, for explicit coverage.
     (OUT / "controls.json").write_text(json.dumps(driver.execute_script("""return Array.from(document.querySelectorAll('button,input,select,a.shiny-download-link')).map(e=>({id:e.id,text:e.innerText,type:e.type,route:e.closest('.tab-pane')?.id}));"""), indent=2))
+    tuning_only = os.getenv("TUNING_ONLY") == "1"
     for type_, button in (("continuous", "all"), ("counts", "counts"), ("relative", "relative")):
+        if tuning_only and type_ != "continuous":
+            continue
         tab("upload")
         check(f"load {type_}", lambda: click(f"#upload-load_example_{button}"))
         check(f"reload {type_}", lambda: click(f"#upload-load_example_{button}"))
+        if tuning_only:
+            continue
         tab("da")
         select("da-type", type_)
         select("da-block", f"Example_{type_}_transcriptomics")
@@ -120,7 +144,7 @@ try:
     tab("DIABLO")
     select("DIABLO-dataSelection", [f"Example_continuous_{b}" for b in ("transcriptomics", "proteomics", "metabolomics")])
     select("DIABLO-classSelection", "Metadata labels")
-    for title in ("Sample plot", "Correlation circle plot", "CIM", "Loading plot", "Arrow plot", "Circos plot"):
+    for title in (() if tuning_only else ("Sample plot", "Correlation circle plot", "CIM", "Loading plot", "Arrow plot", "Circos plot")):
         def plot_route(title=title):
             anchors = [e for e in driver.find_elements(By.CSS_SELECTOR, '#shiny-tab-DIABLO a[data-toggle="tab"]') if e.is_displayed() and title == e.text]
             assert anchors, f"No tab matching {title}"
@@ -136,13 +160,21 @@ try:
         elif route == "sPLS":
             select("sPLS-dataSelection1", "Example_continuous_transcriptomics")
             select("sPLS-dataSelection2", "Example_continuous_proteomics")
+        elif route == "DIABLO":
+            select("DIABLO-dataSelection", [f"Example_continuous_{b}" for b in ("transcriptomics", "proteomics", "metabolomics")])
         select(f"{route}-classSelection", "Metadata labels")
         def set_component_budget(r=route):
             element = driver.find_element(By.ID, f"{r}-ncomp")
+            if not element.is_displayed():
+                card = element.find_element(By.XPATH, './ancestor::div[contains(concat(" ",normalize-space(@class)," ")," card ")][1]')
+                card.find_element(By.CSS_SELECTOR, '[data-card-widget="collapse"]').click()
+                wait.until(lambda d: element.is_displayed())
             element.clear()
             element.send_keys("2")
             element.send_keys("\t")
             idle()
+            received = driver.execute_script("const v=Shiny.shinyapp.$inputValues; const k=Object.keys(v).find(k=>k.split(':')[0]===arguments[0]); return v[k]", f"{r}-ncomp")
+            assert received == 2, f"Shiny component value: {received!r}"
         check(f"{route} component budget 2", set_component_budget)
         titles = ["Sample plot", "Correlation circle plot", "Loading plot"]
         if route in ("sPLS", "DIABLO"):
@@ -152,11 +184,18 @@ try:
         if route in ("sPLS", "DIABLO"):
             for id_ in ("Img.download", "Img.table.download"):
                 check(f"{route} {id_}", lambda r=route, i=id_: download(f"{r}-{i}"))
+        if route == "DIABLO":
+            select("DIABLO-dataSelection", [f"Example_continuous_{b}" for b in ("transcriptomics", "proteomics", "metabolomics")])
         check(f"{route} tune button", lambda r=route: click(f"#{r}-tune"))
         def tuned(r=route):
-            text = driver.find_element(By.ID, f"{r}-ncomp.tuned").text
+            element = driver.find_element(By.ID, f"{r}-ncomp.tuned")
+            if not element.is_displayed():
+                card = element.find_element(By.XPATH, './ancestor::div[contains(concat(" ",normalize-space(@class)," ")," card ")][1]')
+                card.find_element(By.CSS_SELECTOR, '[data-card-widget="collapse"]').click()
+            text = wait.until(lambda d: element.text.strip())
             assert any(c.isdigit() and c != "0" for c in text), text
         check(f"{route} tuned parameter", tuned)
+        dismiss_notifications()
         if route in ("sPLS", "DIABLO"):
             check(f"{route} tuning to CIM", lambda r=route: plot_tab(r, "CIM", tuned=True))
             for id_ in ("Img.download.tuned", "Img.table.download.tuned"):

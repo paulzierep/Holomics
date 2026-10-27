@@ -63,6 +63,9 @@ advanced_fit <- function(method, data, settings) {
   if (is_pair) args$Y <- X[[2]]
   if (is_mint) args$study <- data$study
   if (is_block) {
+    # Continuous block models require an explicit response block. Keep it in
+    # X and identify it with indY so design/keepX retain selected-block order.
+    if (!is_da) args$indY <- length(X)
     design <- matrix(settings$coupling, length(X), length(X), dimnames = list(names(X), names(X)))
     diag(design) <- 0
     if (nzchar(trimws(settings$design_json))) {
@@ -142,6 +145,7 @@ mod_Advanced_ui <- function(id) {
     helpText("Explicit fits on aligned, preprocessed data. Methods run only when Fit is clicked. These are exploratory fits, not independent predictive validation. Existing tuned workflows remain in the original tabs."),
     fluidRow(column(4, selectInput(ns("method"), "Method", advanced_methods()),
       selectInput(ns("blocks"), "Blocks (selection order defines X, Y and design order)", NULL, multiple = TRUE),
+      helpText("Pairwise methods use the first block as X and the second as Y. Continuous block methods (including MINT) use the last selected block as response Y; all preceding blocks are predictors. Discriminant methods use class labels as Y. Design and per-block keepX follow selected-block order."),
       selectInput(ns("labels"), "Class labels / plot groups", NULL),
       conditionalPanel(sprintf("input['%s'] && input['%s'].startsWith('mint.')", ns("method"), ns("method")),
         fileInput(ns("study"), "Study membership (TSV: sample ID, study)", accept = c(".tsv", ".txt")),
@@ -250,8 +254,20 @@ mod_Advanced_server <- function(id, single, multi, classes) {
         if (!block %in% names(scores)) block <- names(scores)[1]
         s <- scores[[block]]
         group <- value$data$labels
-        mixOmics::plotIndiv(s, comp = c(k, k2), group = group, ind.names = if (isTRUE(input$names)) value$data$ids else FALSE,
-          legend = !is.null(group), ellipse = isTRUE(input$ellipse) && !is.null(group), cex = input$size)
+        # plotIndiv dispatches on model classes, not a score matrix. Plot the
+        # selected fitted block explicitly so this works across the catalog.
+        frame <- data.frame(x = s[, k], y = s[, k2], sample = value$data$ids)
+        if (!is.null(group)) frame$group <- group
+        mapping <- if (is.null(group)) ggplot2::aes(x = x, y = y) else ggplot2::aes(x = x, y = y, colour = group)
+        figure <- ggplot2::ggplot(frame, mapping) + ggplot2::geom_point(size = input$size) +
+          ggplot2::labs(x = paste("Component", k), y = paste("Component", k2), title = paste(value$method, block)) +
+          ggplot2::theme_minimal()
+        if (isTRUE(input$names)) figure <- figure + ggplot2::geom_text(ggplot2::aes(label = sample), size = input$size, vjust = -0.5)
+        if (isTRUE(input$ellipse) && !is.null(group)) {
+          validate(need(all(table(group) >= 4), "Group ellipses require at least four samples per group"))
+          figure <- figure + ggplot2::stat_ellipse()
+        }
+        print(figure)
       } else if (type == "Loadings") {
         x <- model$loadings[[input$plot_block]][, k]
         x <- x[order(abs(x), decreasing = TRUE)]
