@@ -87,11 +87,11 @@ getCompVarReactive <- function(input, tuned = FALSE){
       if (tuned){
         req(input$var.x.tuned)
         req(input$var.y.tuned)
-        comp.var.tuned <- as.numeric(c(input$var.x.tuned,input$var.y.tuned))
+        return(as.numeric(c(input$var.x.tuned,input$var.y.tuned)))
       } else {
         req(input$var.x)
         req(input$var.y)
-        comp.var <- as.numeric(c(input$var.x,input$var.y))
+        return(as.numeric(c(input$var.x,input$var.y)))
       }
     })
   )
@@ -108,10 +108,10 @@ getCompImgReactive <- function(input, tuned = FALSE){
     reactive({
       if (tuned) {
         req(input$img.comp.tuned)
-        comp.img.tuned <- as.numeric(input$img.comp.tuned)
+        return(as.numeric(input$img.comp.tuned))
       } else {
         req(input$img.comp)
-        comp.img <- as.numeric(input$img.comp)
+        return(as.numeric(input$img.comp))
       }
     })
   )
