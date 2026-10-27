@@ -65,8 +65,9 @@ def download(id_):
     paths = wait.until(lambda d: [p for p in downloads.iterdir() if p.suffix != '.crdownload' and p.stat().st_mtime_ns != before.get(p)])
     assert all(p.stat().st_size > 100 for p in paths), "Empty download"
 
-def plot_tab(route, title):
-    anchor = next(e for e in driver.find_elements(By.CSS_SELECTOR, f'#shiny-tab-{route} a[data-toggle="tab"]') if e.is_displayed() and e.text == title)
+def plot_tab(route, title, tuned=False):
+    anchors = [e for e in driver.find_elements(By.CSS_SELECTOR, f'#shiny-tab-{route} a[data-toggle="tab"]') if e.is_displayed() and e.text == title]
+    anchor = anchors[-1] if tuned else anchors[0]
     driver.execute_script("arguments[0].scrollIntoView({block:'center'})", anchor)
     anchor.click()
     idle()
@@ -149,7 +150,7 @@ try:
             assert any(c.isdigit() and c != "0" for c in text), text
         check(f"{route} tuned parameter", tuned)
         if route in ("sPLS", "DIABLO"):
-            check(f"{route} tuning to CIM", lambda r=route: plot_tab(r, "CIM"))
+            check(f"{route} tuning to CIM", lambda r=route: plot_tab(r, "CIM", tuned=True))
             for id_ in ("Img.download.tuned", "Img.table.download.tuned"):
                 check(f"{route} {id_}", lambda r=route, i=id_: download(f"{r}-{i}"))
     # Keep a snapshot of all currently rendered controls/errors for the next phase.

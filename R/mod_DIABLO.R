@@ -144,22 +144,22 @@ render_diablo_ui_components <- function(ns, input, output, dataSelection, tunedV
   
   renderImgComp(ns, input, output, TRUE, tunedVals)
   
-  output$diablo.comp <- renderUI({
+  output$diablo.comp.ui <- renderUI({
     selectInput(ns("diablo.comp"), "Component:", seq(1, input$ncomp, 1))
   })
   
-  output$nodes <- renderUI({
+  output$nodes.ui <- renderUI({
     req(nodes$data)
     selectInput(ns("nodeNames"), "Select a node", 
                 choices = c("---" = "null", combineLists(nodes$data["label"], nodes$data["id"])))
   })
   
   #tuned
-  output$diablo.comp.tuned <- renderUI({
+  output$diablo.comp.ui.tuned <- renderUI({
     selectizeInput(ns("diablo.comp.tuned"), "Component:", seq(1, tunedVals$ncomp, 1))
   })
   
-  output$nodes.tuned <- renderUI({
+  output$nodes.ui.tuned <- renderUI({
     req(nodesTuned$data)
     selectizeInput(ns("nodeNames.tuned"), "Select a node", 
                    choices = c("---" = "null", combineLists(nodesTuned$data["label"], nodesTuned$data["id"])))

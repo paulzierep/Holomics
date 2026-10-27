@@ -36,7 +36,7 @@ getsPLSSelectedVarsPlot <- function(ns, postfix = ""){
   return(
     tabPanel("Selected features",
              fluidRow(
-               uiOutput(paste0(ns("sel.var.comp"), postfix))
+                uiOutput(paste0(ns("sel.var.comp.ui"), postfix))
              ),
              fluidRow(
                bs4Dash::tabBox(width = 12,

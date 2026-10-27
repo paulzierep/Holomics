@@ -9,6 +9,7 @@ docker exec omicsharbor Rscript /opt/Holomics/tests/validation.R
 docker exec omicsharbor Rscript /opt/Holomics/tests/da-boundaries.R
 docker exec omicsharbor Rscript /opt/Holomics/tests/da-matrix.R
 docker exec omicsharbor Rscript /opt/Holomics/tests/regression.R
+docker exec omicsharbor Rscript /opt/Holomics/tests/ui-identifiers.R
 docker exec -e TEST_METHOD=PCA omicsharbor Rscript /opt/Holomics/tests/tuning.R
 docker exec -e TEST_METHOD=PLSDA omicsharbor Rscript /opt/Holomics/tests/tuning.R
 docker exec -e TEST_METHOD=sPLS omicsharbor Rscript /opt/Holomics/tests/tuning.R
@@ -28,6 +29,9 @@ python3 tests/browser_routes.py
   cover six model classes and three symbol sizes. These use pre-fitted models.
 - `tuning.R`: actual module tuning event; sPLS/DIABLO also read the resulting
   tuned CIM output. These are reactive-server tests, not browser clicks.
+- `ui-identifiers.R`: verifies eight original/tuned dynamic selector outputs
+  use container IDs distinct from their nested inputs. Real-browser tests
+  remain necessary: server output tests alone missed the duplicate-ID bug.
 - `browser_routes.py`: headless real-button/navigation/download campaign;
   select inputs use the widget API. Screenshots, control inventory, logs and
   per-case results are retained under ignored `browser-evidence*/` directories.
