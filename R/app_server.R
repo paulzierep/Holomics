@@ -15,6 +15,7 @@ app_server <- function( input, output, session ) {
   
   
   mod_Upload_server("upload", singleomicsData, singleomicsClasses, multiomicsData, multiomicsClasses, tables)
+  galaxy_server(singleomicsData, multiomicsData, singleomicsClasses, multiomicsClasses, tables, input, output)
   
   mod_PLSDA_server("PLSDA", singleomicsData, singleomicsClasses, multiomicsData, tables)
   mod_PCA_server("PCA", singleomicsData, singleomicsClasses, multiomicsData, tables)

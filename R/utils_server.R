@@ -313,6 +313,7 @@ getDownloadHandler <- function(filename, contentfct, type = "png", width = 1800,
           wb <- contentfct(result, comp)
           openxlsx::saveWorkbook(wb, file)
         }
+        galaxy_capture_download(file, filename)
       }
     )
   )

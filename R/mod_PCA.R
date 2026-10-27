@@ -230,7 +230,7 @@ pca_filterByLoadings <- function(input, output, dataSelection, result, tunedVals
         grid.keepX <- getTestKeepX(ncol(dataSelection$data$omicsData))
         folds <- floor(nrow(dataSelection$data$omicsData)/3)
         
-        BPPARAM <- BiocParallel::SnowParam(workers = max(parallel::detectCores()-1, 2))
+        BPPARAM <- BiocParallel::SnowParam(workers = galaxy_workers())
         suppressWarnings({
           tune.spca.result <- mixOmics::tune.spca(dataSelection$data$omicsData, ncomp = ncomp,
                                                   test.keepX = grid.keepX, scale = input$scale,
@@ -581,6 +581,7 @@ generate_pca_plots <- function(ns, input, output, dataSelection, classSelection,
     content = function(file){
       openxlsx::write.xlsx(multiDataset$data[[paste0(dataName(), "_pca_reduced")]]$omicsData, 
                            file, rowNames = TRUE, colNames = TRUE)
+      galaxy_capture_download(file, paste0(dataName(), "_pca_reduced.xlsx"))
     }
   )
 

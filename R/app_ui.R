@@ -43,6 +43,7 @@ app_ui <- function(request) {
       ## Body content
       bs4Dash::dashboardBody(
         shinyjs::useShinyjs(),
+        galaxy_ui(),
         bs4Dash::tabItems(
           bs4Dash::tabItem(tabName = "home",
                            fluidRow(

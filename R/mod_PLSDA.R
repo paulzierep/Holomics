@@ -572,6 +572,7 @@ generate_plsda_plots <- function(ns, input, output, dataSelection, classSelectio
     content = function(file){
       openxlsx::write.xlsx(multiDataset$data[[paste0(dataName(), "_plsda_reduced")]]$omicsData, 
                            file, rowNames = TRUE, colNames = TRUE)
+      galaxy_capture_download(file, paste0(dataName(), "_plsda_reduced.xlsx"))
     }
   )
 }

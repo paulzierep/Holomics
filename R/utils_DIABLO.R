@@ -156,6 +156,7 @@ diabloGetNetworkDownloadHandler <- function(filename, network, type){
         } else if (type == "gml"){
           igraph::write.graph(network$mixNetwork$gR, file, format = "gml")
         }
+        galaxy_capture_download(file, filename)
       }
     )
   )
