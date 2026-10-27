@@ -137,6 +137,13 @@ try:
             select("sPLS-dataSelection1", "Example_continuous_transcriptomics")
             select("sPLS-dataSelection2", "Example_continuous_proteomics")
         select(f"{route}-classSelection", "Metadata labels")
+        def set_component_budget(r=route):
+            element = driver.find_element(By.ID, f"{r}-ncomp")
+            element.clear()
+            element.send_keys("2")
+            element.send_keys("\t")
+            idle()
+        check(f"{route} component budget 2", set_component_budget)
         titles = ["Sample plot", "Correlation circle plot", "Loading plot"]
         if route in ("sPLS", "DIABLO"):
             titles.append("CIM")

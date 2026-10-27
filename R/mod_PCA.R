@@ -180,7 +180,7 @@ observe_pca_ui_components <- function(ns, input, output, dataset, dataSelection,
     classSelection$data <- classes$data[[input$classSelection]]
   })
   
-  observeEvent(dataSelection$data, {
+  observeEvent(list(dataSelection$data, classSelection$data, input$scale, input$ncomp), {
     useTunedVals(FALSE)
     shinyjs::hide("tunedCol")
     shinyjs::hide("Filter.download")

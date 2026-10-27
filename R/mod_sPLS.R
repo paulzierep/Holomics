@@ -213,7 +213,7 @@ observe_spls_ui_components <- function(ns, input, output, data, dataSelection, c
   
   # Observe change of data
   observeDataset <- reactive({
-    list(dataSelection$dataX, dataSelection$dataY)
+    list(dataSelection$dataX, dataSelection$dataY, classSelection$data, input$scale, input$ncomp, input$mode)
   })
   
   observeEvent(observeDataset(), {

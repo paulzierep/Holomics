@@ -212,6 +212,11 @@ observe_diablo_ui_components <- function(ns, session, input, output, data, dataS
   observeEvent(input$classSelection, {
     classSelection$data <- classes$data[[input$classSelection]]
   })
+
+  observeEvent(list(classSelection$data, input$scale, input$ncomp, input$matrix), {
+    useTunedVals(FALSE)
+    shinyjs::hide("tunedCol")
+  })
   
   #Observe data change
   observeEvent(dataSelection$data, {
