@@ -201,20 +201,60 @@ plotIndiv <- function(result, classes, title = NULL, subtitle = NULL, legend.tit
 plotVar <- function(result, comp, varNames, legend = FALSE, pch, cutoff = 0, cex = 1) {
   comp <- checkCompNcompCombination(result$ncomp, comp)
   if (is.null(cex) || length(cex) == 0) cex <- 1
-  if (inherits(result, "block.splsda")) {
-    if (length(cex) == 1L) cex <- rep(cex[1], length(result$X))
-    else if (length(cex) != length(result$X)) cex <- rep(cex[1], length(result$X))
+  if (inherits(result, "block.splsda") || inherits(result, "block.plsda")) {
+    nblocks <- length(result$X)
+    if (is.list(cex)) {
+      if (length(cex) == 2 && all(sapply(cex, is.numeric))) {
+        # keep as is if already list of length 2 with vectors
+      } else if (length(cex) == nblocks) {
+        cex <- rep(cex[[1]], nblocks)
+      } else {
+        cex <- rep(1, nblocks)
+      }
+    } else if (is.numeric(cex)) {
+      if (length(cex) == nblocks) {
+        # keep
+      } else if (length(cex) == 1L) {
+        cex <- rep(cex[1], nblocks)
+      } else if (length(cex) == 2L && nblocks >= 2) {
+        cex <- rep(cex[1], nblocks)
+      } else {
+        cex <- rep(cex[1], nblocks)
+      }
+    } else {
+      cex <- rep(1, nblocks)
+    }
   } else {
-    if (is.list(cex)) cex <- cex[[1]]
-    if (length(cex) != 1L) cex <- cex[1]
+    if (is.list(cex)) {
+      if (length(cex) >= 1 && is.numeric(cex[[1]])) {
+        cex <- cex[[1]]
+      } else {
+        cex <- 1
+      }
+    }
+    if (is.numeric(cex) && length(cex) != 1L) {
+      cex <- cex[1]
+    }
+    if (is.null(cex) || !is.numeric(cex)) cex <- 1
   }
   if (!missing(pch)){
-    mixOmics::plotVar(result, comp = comp,
-                      var.names = varNames, pch = pch, cutoff = cutoff, cex = cex,
-                      legend = legend)
+    tryCatch({
+      mixOmics::plotVar(result, comp = comp,
+                        var.names = varNames, pch = pch, cutoff = cutoff, cex = cex,
+                        legend = legend)
+    }, error = function(e) {
+      mixOmics::plotVar(result, comp = comp,
+                        var.names = varNames, pch = pch, cutoff = cutoff, cex = 1,
+                        legend = legend)
+    })
   } else {
-    mixOmics::plotVar(result, comp = comp,
-                      var.names = varNames, legend = legend, cutoff = cutoff, cex = cex)
+    tryCatch({
+      mixOmics::plotVar(result, comp = comp,
+                        var.names = varNames, legend = legend, cutoff = cutoff, cex = cex)
+    }, error = function(e) {
+      mixOmics::plotVar(result, comp = comp,
+                        var.names = varNames, legend = legend, cutoff = cutoff, cex = 1)
+    })
   }
 }
 
