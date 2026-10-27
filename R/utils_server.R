@@ -198,16 +198,18 @@ plotIndiv <- function(result, classes, title = NULL, subtitle = NULL, legend.tit
 #' @return Correlation Circle plot
 #'
 #' @noRd
-plotVar <- function(result, comp, varNames, legend = FALSE, pch) {
+plotVar <- function(result, comp, varNames, legend = FALSE, pch, cutoff = 0, cex = 1) {
   comp <- checkCompNcompCombination(result$ncomp, comp)
+  if (inherits(result, "block.splsda") && length(cex) == 1L)
+    cex <- rep(cex, length(result$X))
   
   if (!missing(pch)){
     mixOmics::plotVar(result, comp = comp,
-                      var.names = varNames, pch = pch,
+                      var.names = varNames, pch = pch, cutoff = cutoff, cex = cex,
                       legend = legend)
   } else {
     mixOmics::plotVar(result, comp = comp,
-                      var.names = varNames, legend = legend)
+                      var.names = varNames, legend = legend, cutoff = cutoff, cex = cex)
   }
 }
 

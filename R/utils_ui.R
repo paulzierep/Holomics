@@ -191,7 +191,9 @@ getVariablePlot <- function(ns, postfix = ""){
     tabPanel("Correlation circle plot",
              fluidRow(style = "display: flex; column-gap: 1rem",
                       uiOutput(paste0(ns("var.x.comp"), postfix)),
-                      uiOutput(paste0(ns("var.y.comp"), postfix)),
+                       uiOutput(paste0(ns("var.y.comp"), postfix)),
+                       numericInput(paste0(ns("var.cutoff"), postfix), "Minimum correlation-circle radius", value = 0, min = 0, max = 1, step = 0.05),
+                       numericInput(paste0(ns("var.size"), postfix), "Feature label / point size", value = 1, min = 0.2, max = 3, step = 0.1),
                       awesomeCheckbox(paste0(ns("var.names"), postfix), "Feature names", value = FALSE)
              ),
              fluidRow(
@@ -238,6 +240,7 @@ getLoadingsPlot <- function(ns, postfix = ""){
 getSelectedVarsPlot <- function(ns, postfix = ""){
   return(
     tabPanel("Selected features",
+             helpText("Model-selected features and loadings, not significance tests. Sparse fits select non-zero loadings; ordinary PCA/PLS fits may retain all features. No feature-level p-values or FDR are computed."),
              fluidRow(
                uiOutput(paste0(ns("sel.var.comp"), postfix))
              ),
@@ -262,7 +265,10 @@ getCimPlot <- function(ns, postfix = "", yMargin = 5){
   return(
     tabPanel("CIM",
              fluidRow(style = "display: flex; column-gap: 1rem",
-               uiOutput(paste0(ns("img.comp"), postfix)),
+                uiOutput(paste0(ns("img.comp"), postfix)),
+                awesomeCheckbox(paste0(ns("heatmap.rows"), postfix), "Show row names", value = TRUE),
+                awesomeCheckbox(paste0(ns("heatmap.columns"), postfix), "Show column names", value = TRUE),
+                awesomeCheckbox(paste0(ns("heatmap.transpose"), postfix), "Transpose heatmap", value = FALSE),
                numericInput(paste0(ns("xmargin"), postfix), label = "X-Margin:", value = 5, 
                             min = 1, max = 20, step = 1),
                numericInput(paste0(ns("ymargin"), postfix), label = "Y-Margin:", value = yMargin, 
@@ -335,8 +341,14 @@ getCircosPlot <- function(ns, postfix = ""){
   return (
     tabPanel("Circos plot",
              fluidRow(
+               uiOutput(paste0(ns("circos.components"), postfix)),
+               awesomeCheckbox(paste0(ns("circos.intra"), postfix), "Show within-block links", value = FALSE),
+               numericInput(paste0(ns("circos.linkwidth"), postfix), "Link width", value = 1, min = 0.2, max = 5, step = 0.2)
+             ),
+             helpText("Links show model-based associations, not p-values or FDR-significant relationships."),
+             fluidRow(
                bs4Dash::column(width = 3,
-                numericInput(paste0(ns("cutoffCircos"), postfix), "Cutoff value",
+                 numericInput(paste0(ns("cutoffCircos"), postfix), "Minimum absolute association",
                             min = 0, max = 1, step = 0.1, value = 0.7)
                ),
                bs4Dash::column(width = 4,

@@ -419,7 +419,7 @@ generate_pca_plots <- function(ns, input, output, dataSelection, classSelection,
   
   plot.var <- function(){
     if(!is.null(result())){
-      plotVar(result(), comp.var(), input$var.names)
+      plotVar(result(), comp.var(), input$var.names, cutoff = input$var.cutoff, cex = input$var.size)
     }
   }
   
@@ -466,7 +466,7 @@ generate_pca_plots <- function(ns, input, output, dataSelection, classSelection,
   
   plot.var.tuned <- function(){
     if(!is.null(resultTuned())){
-      plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned)
+      plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned, cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
     }
   }
   

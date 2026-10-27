@@ -580,7 +580,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
     if(!is.null(result())){
       names <- getDatasetNames(dataSelection$dataXName, dataSelection$dataYName)
       plotVar(result(), comp.var(), input$var.names,
-            pch = c(1,2), legend = c(names$name1, names$name2))
+            pch = c(1,2), legend = c(names$name1, names$name2), cutoff = input$var.cutoff, cex = input$var.size)
     }
   }
   
@@ -606,7 +606,8 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
   plot.img <- function(){
     if(!is.null(result())){
       comp.img <- checkCompNcompCombination(result()$ncomp, comp.img())
-      mixOmics::cim(result(), comp = comp.img, margin=c(input$xmargin, input$ymargin), 
+      mixOmics::cim(result(), comp = comp.img, margins=c(input$xmargin, input$ymargin),
+                    row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
                     xlab = dataSelection$dataYName, ylab = dataSelection$dataXName)
     }
   }
@@ -662,7 +663,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
   plot.var.tuned <- function(){
     if (!is.null(resultTuned())){
       plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned,
-              pch = c(1,2), legend = TRUE)
+              pch = c(1,2), legend = TRUE, cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
     }
   }
   
@@ -686,7 +687,8 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
   
   plot.img.tuned <- function(){
     if (!is.null(resultTuned())){
-      mixOmics::cim(resultTuned(), comp = comp.img.tuned(), margin=c(input$xmargin.tuned, input$ymargin.tuned),
+      mixOmics::cim(resultTuned(), comp = comp.img.tuned(), margins=c(input$xmargin.tuned, input$ymargin.tuned),
+                    row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
                     xlab = dataSelection$dataYName, ylab = dataSelection$dataXName)
     }
   }

@@ -50,6 +50,13 @@ Imports:
     mixOmics,
     BiocParallel
 Suggests:
+    limma,
+    edgeR,
+    DESeq2,
+    sva,
+    lmerTest,
+    maaslin3,
+    ANCOMBC,
     bookdown,
     knitr,
     rmarkdown,

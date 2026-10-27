@@ -65,9 +65,10 @@ galaxy_import <- function(manifest, single, multi, single_classes, multi_classes
       if (isTRUE(block$prepared)) "both" else "single", block$name)
   }
   if (!is.null(classes)) {
-    single_classes$data[["Galaxy labels"]] <- classes
-    multi_classes$data[["Galaxy labels"]] <- classes
-    tables$classes <- extendClassTable(tables$classes, "Galaxy labels", "labels", nrow(classes), FALSE)
+    label_name <- if (is.null(manifest$label_name)) "Galaxy labels" else manifest$label_name
+    single_classes$data[[label_name]] <- classes
+    multi_classes$data[[label_name]] <- classes
+    tables$classes <- extendClassTable(tables$classes, label_name, "labels", nrow(classes), FALSE)
   }
   invisible(NULL)
 }
@@ -102,16 +103,46 @@ galaxy_capture_download <- function(file, filename) {
 }
 
 galaxy_ui <- function() {
-  if (!galaxy_enabled()) return(NULL)
-  bs4Dash::box(title = "Galaxy session", width = 12, collapsed = FALSE,
+  bs4Dash::box(title = "Quick start", width = 12, collapsed = TRUE,
+    shiny::actionButton("galaxy_example", "Load complete example"),
+    shiny::helpText("Synthetic demo: 36 matched samples, three classes (Control, Treatment_A, Treatment_B), 60 transcripts, 40 proteins and 30 metabolites. Already transformed demo measurements; not biological evidence. Adds Example_ blocks and Example labels without replacing your other data."),
     shiny::textOutput("galaxy_status"),
-    shiny::p("Downloads also send a copy to Galaxy. Project checkpoints preserve imported and reduced data; plots/models can be regenerated, but analysis settings are not yet restored."),
-    shiny::actionButton("galaxy_send_project", "Send project to Galaxy"))
+    shiny::helpText("After loading, select the Example_ blocks and Example labels in an analysis tab."))
 }
 
-galaxy_server <- function(single, multi, single_classes, multi_classes, tables, input, output) {
+galaxy_server <- function(single, multi, single_classes, multi_classes, tables, input, output, metadata = NULL) {
+  status <- shiny::reactiveVal("")
+  output$galaxy_status <- shiny::renderText(status())
+  load_example <- function() {
+    directory <- system.file("extdata", "three-omics", package = "Holomics")
+    manifest <- list(blocks = lapply(c("transcriptomics", "proteomics", "metabolomics"), function(name)
+      list(name = paste0("Example_", name), path = file.path(directory, paste0(name, ".tsv")),
+           separator = "tab", prepared = TRUE)),
+      labels = list(path = file.path(directory, "labels.tsv"), separator = "tab"),
+      label_name = "Example labels")
+    tryCatch({
+      galaxy_import(manifest, single, multi, single_classes, multi_classes, tables)
+      if (!is.null(metadata)) {
+        metadata$data <- galaxy_read_table(file.path(directory, "metadata.tsv"))
+        metadata$references <- list(Group = "Control")
+      }
+      status("Complete example loaded: 3 omics layers, classes and covariates. Choose an analysis on Home.")
+    }, error = function(e) status(paste("Example import failed:", conditionMessage(e))))
+  }
+  shiny::observeEvent(input$galaxy_example, {
+    occupied <- any(startsWith(as.character(names(single$data)), "Example_")) ||
+      (!is.null(metadata) && !is.null(metadata$data))
+    if (occupied) {
+      shiny::showModal(shiny::modalDialog(title = "Load the example project?",
+        "This replaces Example_ blocks, Example labels and the shared sample metadata. Other omics blocks are kept. Saved analysis results are unchanged.",
+        footer = shiny::tagList(shiny::modalButton("Cancel"), shiny::actionButton("confirm_example", "Load example"))))
+    } else load_example()
+  })
+  shiny::observeEvent(input$confirm_example, {
+    shiny::removeModal()
+    load_example()
+  })
   if (!galaxy_enabled()) return(invisible(NULL))
-  status <- shiny::reactiveVal("Starting Galaxy integration")
   shiny::observeEvent(TRUE, {
     tryCatch({
       project <- file.path(Sys.getenv("HOLOMICS_INPUT_DIR"), "project.rds")

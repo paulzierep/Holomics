@@ -19,6 +19,18 @@ mod_Upload_ui <- function(id){
              )
     ),
     tags$hr(),
+    tags$hr(),
+    fluidRow(
+      bs4Dash::column(width = 12,
+                      bs4Dash::box(title = "Load example data", width = 12, collapsed = FALSE,
+                                   actionButton(ns("load_example_all"), "Load all example data"),
+                                   actionButton(ns("load_example_omics"), "Load example omics data"),
+                                   actionButton(ns("load_example_labels"), "Load example labels / metadata"),
+                                   helpText("Load all example data loads the three omics blocks, class labels and full sample metadata (Group, age, sex, batch, subject_id) together.")
+                      )
+      )
+    ),
+    tags$hr(),
     fluidRow(
       bs4Dash::column(width = 5, style = "margin-left: 1rem",
                       awesomeRadio(ns("type"), "Data type", inline = TRUE,
@@ -35,7 +47,7 @@ mod_Upload_ui <- function(id){
 #' upload Server Functions
 #'
 #' @noRd 
-mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiClasses, tables){
+mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiClasses, tables, metadata = NULL){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
@@ -312,6 +324,58 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
         
         tables$classes <- removeRowsFromMatrix(tables$classes, selRows, initClassMatrix)
       }
+    })
+
+    upload_example_omics <- function() {
+      directory <- system.file("extdata", "three-omics", package = "Holomics")
+      for (name in c("transcriptomics", "proteomics", "metabolomics")) {
+        data <- galaxy_read_table(file.path(directory, paste0(name, ".tsv")))
+        block_name <- paste0("Example_", name)
+        if (!is.null(singleData)) singleData$data[[block_name]] <- list(omicsData = data, name = block_name)
+        if (!is.null(multiData)) multiData$data[[block_name]] <- list(omicsData = data, name = block_name)
+        tables$data <- extendDataTable(tables$data, block_name, paste0(name, ".tsv"), nrow(data), ncol(data), FALSE, "both", block_name)
+      }
+    }
+
+    upload_example_labels <- function() {
+      directory <- system.file("extdata", "three-omics", package = "Holomics")
+      df_classes <- galaxy_read_table(file.path(directory, "labels.tsv"))
+      classes <- data.frame(sample = rownames(df_classes), class = as.character(df_classes[[1]]), stringsAsFactors = FALSE)
+      names(classes)[2] <- names(df_classes)[1]
+      label_name <- "Example labels"
+      if (!is.null(singleClasses)) singleClasses$data[[label_name]] <- classes
+      if (!is.null(multiClasses)) multiClasses$data[[label_name]] <- classes
+      existing <- if (!is.null(tables$classes)) as.character(tables$classes[, 1]) else character()
+      if (label_name %in% existing) {
+        idx <- which(tables$classes[, 1] == label_name)
+        tables$classes <- removeRowsFromMatrix(tables$classes, idx, initClassMatrix)
+      }
+      tables$classes <- extendClassTable(tables$classes, label_name, "labels.tsv", nrow(classes), FALSE)
+    }
+
+    upload_example_metadata <- function(metadata) {
+      if (is.null(metadata)) return(invisible(NULL))
+      directory <- system.file("extdata", "three-omics", package = "Holomics")
+      metadata$data <- galaxy_read_table(file.path(directory, "metadata.tsv"))
+      metadata$references <- list(Group = "Control")
+      invisible(NULL)
+    }
+
+    observeEvent(input$load_example_omics, {
+      tryCatch(upload_example_omics(), error = function(e) getShinyErrorAlert(paste("Example omics load failed:", conditionMessage(e))))
+    })
+    observeEvent(input$load_example_labels, {
+      tryCatch({
+        upload_example_labels()
+        upload_example_metadata(metadata)
+      }, error = function(e) getShinyErrorAlert(paste("Example labels load failed:", conditionMessage(e))))
+    })
+    observeEvent(input$load_example_all, {
+      tryCatch({
+        upload_example_omics()
+        upload_example_labels()
+        upload_example_metadata(metadata)
+      }, error = function(e) getShinyErrorAlert(paste("All example data load failed:", conditionMessage(e))))
     })
   })
 }

@@ -14,24 +14,30 @@ app_ui <- function(request) {
       
       ## Header 
       bs4Dash::dashboardHeader(
-        title = tags$img(src='www/img/logo.png', width="80%", style="display: block; margin: auto;"),
+        title = tags$span(style = "display:flex;align-items:center;gap:8px;",
+          tags$img(src = "www/img/omicsharbor.svg", height = "38px", alt = "OmicsHarbor icon"),
+          tags$span("OmicsHarbor", style = "font-weight:700;font-size:20px;")),
         controlbarIcon = icon("table-cells")
       ),
       
       
       ## Sidebar content  
       bs4Dash::dashboardSidebar(
-        bs4Dash::sidebarMenu(
+        bs4Dash::sidebarMenu(id = "main_navigation",
           
           bs4Dash::menuItem("Home", tabName = "home", icon = icon("house")),
-          bs4Dash::menuItem("Upload data", tabName = "upload", icon = icon("upload")),
+          bs4Dash::menuItem("Project & data", tabName = "upload", icon = icon("upload")),
           bs4Dash::menuItem("Single-omics", tabName = "singleOmics", icon = icon("window-minimize"),
                             bs4Dash::menuSubItem("PCA", tabName = "PCA"),
                             bs4Dash::menuSubItem("PLS-DA", tabName = "PLSDA")
           ),
           bs4Dash::menuItem("Pairwise", tabName = "sPLS", icon = icon("layer-group")),
-          bs4Dash::menuItem("Multi-omics", tabName = "DIABLO", icon = icon("layer-group")),
-          bs4Dash::menuItem("Help", tabName = "help", icon = icon("info"), startExpanded = F,
+           bs4Dash::menuItem("Multi-omics", tabName = "DIABLO", icon = icon("layer-group")),
+           bs4Dash::menuItem("Advanced mixOmics", tabName = "advanced", icon = icon("sliders")),
+           bs4Dash::menuItem("DA / statistics", tabName = "da", icon = icon("chart-line")),
+           bs4Dash::menuItem("Help", tabName = "help", icon = icon("info"), startExpanded = F,
+                            bs4Dash::menuSubItem("Workflow guide", tabName = "help-workflow"),
+                            bs4Dash::menuSubItem("Worked examples", tabName = "help-examples"),
                             bs4Dash::menuSubItem("Plots", tabName = "help-plots"),
                             bs4Dash::menuSubItem(HTML("Feature selection <br> and tuning"), tabName = "help-tuning"),
                             bs4Dash::menuSubItem("DIABLO design matrix", tabName = "help-designmatrix")
@@ -48,13 +54,17 @@ app_ui <- function(request) {
           bs4Dash::tabItem(tabName = "home",
                            fluidRow(
                              column(width = 10,
-                                    includeMarkdown(app_sys("app/www/01-home.md")))
+                                    project_home_ui())
                            )),
-          bs4Dash::tabItem(tabName = "upload", mod_Upload_ui("upload")),
+          bs4Dash::tabItem(tabName = "upload", mod_Upload_ui("upload"), mod_Metadata_ui("metadata")),
+          bs4Dash::tabItem(tabName = "da", mod_DA_ui("da")),
           bs4Dash::tabItem(tabName = "PCA", mod_PCA_ui("PCA")),
           bs4Dash::tabItem(tabName = "PLSDA", mod_PLSDA_ui("PLSDA")),
           bs4Dash::tabItem(tabName = "sPLS", mod_sPLS_ui("sPLS")),
-          bs4Dash::tabItem(tabName = "DIABLO", mod_DIABLO_ui("DIABLO")),
+          bs4Dash::tabItem(tabName = "DIABLO", mod_DAOverview_ui("da_overview"), mod_DIABLO_ui("DIABLO")),
+          bs4Dash::tabItem(tabName = "advanced", mod_Advanced_ui("advanced")),
+          bs4Dash::tabItem(tabName = "help-workflow", workflow_guide_ui()),
+          bs4Dash::tabItem(tabName = "help-examples", HTML(markdown::mark(app_sys("app/www/help-examples.md"), options = list(embed_resources = character())))),
           bs4Dash::tabItem(tabName = "help-plots", 
                            fluidRow(
                              column(width = 10,
@@ -82,12 +92,8 @@ app_ui <- function(request) {
     
     bs4Dash::bs4DashFooter(
       fluidRow(
-        column(width = 12, align = "center", 
-               a(href = "https://www.ait.ac.at/en/", HTML("<b> AIT Austrian Institute of Technology"),
-                 target = "_blank", rel="noreferrer noopener"), 
-
-                br(),
-               "Copyright (C) 2023" 
+        column(width = 12, align = "center",
+               "OmicsHarbor by Paul Zierep · Based on Holomics · GPL-3.0-or-later"
         )
       )
     )
@@ -117,10 +123,10 @@ golem_add_external_resources <- function(){
   )
   
   tags$head(
-    favicon(),
+    tags$link(rel = "icon", type = "image/svg+xml", href = "www/img/omicsharbor.svg"),
     bundle_resources(
       path = app_sys('app/www'),
-      app_title = 'Holomics'
+      app_title = 'OmicsHarbor'
     ),
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert() 

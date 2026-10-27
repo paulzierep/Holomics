@@ -392,7 +392,7 @@ generate_plsda_plots <- function(ns, input, output, dataSelection, classSelectio
   
   plot.var <- function(){
     if (!is.null(result())){
-      plotVar(result(), comp.var(), input$var.names)
+      plotVar(result(), comp.var(), input$var.names, cutoff = input$var.cutoff, cex = input$var.size)
     }
   }
   
@@ -454,7 +454,7 @@ generate_plsda_plots <- function(ns, input, output, dataSelection, classSelectio
           "There need to be at least two components to render this plot!"
         })
       } else {
-        plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned)
+        plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned, cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
       }
     }
   }

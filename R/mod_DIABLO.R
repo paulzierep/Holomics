@@ -133,6 +133,7 @@ mod_DIABLO_server <- function(id, data, classes){
 #' Render Ui components
 #' @noRd
 render_diablo_ui_components <- function(ns, input, output, dataSelection, tunedVals, nodes, nodesTuned){
+  render_circos_components(ns, input, output, tunedVals)
   renderIndivComps(ns, input, output, TRUE, tunedVals)
 
   renderVarComps(ns, input, output, TRUE, tunedVals)
@@ -506,7 +507,8 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   plot.var <- function(){
     if(!is.null(result()) & input$ncomp >= 2){
       plotVar(result(), comp.var(), input$var.names,
-              pch = seq(1, length(dataSelection$data), 1), legend = TRUE)
+              pch = seq(1, length(dataSelection$data), 1), legend = TRUE,
+              cutoff = input$var.cutoff, cex = input$var.size)
     }
   }
   
@@ -526,11 +528,13 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
     if(!is.null(result()) & length(dataSelection$data) > 1){
       if (ncol(classSelection$data) == 3){
         colors = getGroupColors(classSelection$data)
-        mixOmics::cimDiablo(result(), comp = 1, margin=c(input$xmargin, input$ymargin),
+        mixOmics::cimDiablo(result(), comp = comp.img(), margins=c(input$xmargin, input$ymargin),
+                            row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
                             legend.position = "right", size.legend = 1,
                             color.Y = colors, trim = F)
       } else {
-        mixOmics::cimDiablo(result(), comp = 1, margin=c(input$xmargin, input$ymargin),
+        mixOmics::cimDiablo(result(), comp = comp.img(), margins=c(input$xmargin, input$ymargin),
+                            row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
                             legend.position = "right",
                             size.legend = 1, trim = F)
       }
@@ -580,10 +584,13 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
         colors = getGroupColors(classSelection$data)
         mixOmics::circosPlot(result(), cutoff = input$cutoffCircos, line = input$showLine, legend.title = title,
                              size.labels = input$datasetSizeCircos, size.variables = input$featureSizeCircos,
-                             color.Y = colors)
+                              color.Y = colors, comp = as.numeric(input$circos.components),
+                              showIntraLinks = input$circos.intra, linkWidth = input$circos.linkwidth)
       } else {
         mixOmics::circosPlot(result(), cutoff = input$cutoffCircos, line = input$showLine, legend.title = title,
-                             size.labels = input$datasetSizeCircos, size.variables = input$featureSizeCircos)      
+                              size.labels = input$datasetSizeCircos, size.variables = input$featureSizeCircos,
+                              comp = as.numeric(input$circos.components), showIntraLinks = input$circos.intra,
+                              linkWidth = input$circos.linkwidth)
       }
     }
   }
@@ -609,7 +616,8 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   plot.var.tuned <- function(){
     if(!is.null(result.tuned()) & tunedVals$ncomp >= 2){
       plotVar(result.tuned(), comp.var.tuned(), input$var.names.tuned,
-              pch = seq(1, length(dataSelection$data), 1), legend = TRUE)
+              pch = seq(1, length(dataSelection$data), 1), legend = TRUE,
+              cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
     }
   }
   
@@ -632,12 +640,14 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
       if (ncol(classSelection$data) == 3){
         colors = getGroupColors(classSelection$data)
         mixOmics::cimDiablo(result.tuned(), comp = comp.img.tuned, 
-                            margin=c(input$xmargin.tuned, input$ymargin.tuned), 
+                            margins=c(input$xmargin.tuned, input$ymargin.tuned),
+                            row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
                             legend.position = "right",
                             size.legend = 1, color.Y = colors, trim = F)
       } else {
         mixOmics::cimDiablo(result.tuned(), comp = comp.img.tuned,
-                            margin=c(input$xmargin.tuned, input$ymargin.tuned), 
+                            margins=c(input$xmargin.tuned, input$ymargin.tuned),
+                            row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
                             legend.position = "right",
                             size.legend = 1, trim = F)
       }
@@ -688,10 +698,13 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
         colors = getGroupColors(classSelection$data)
         mixOmics::circosPlot(result.tuned(), cutoff = input$cutoffCircos.tuned, line = input$showLine.tuned, legend.title = title,
                              size.labels = input$datasetSizeCircos.tuned, size.variables = input$featureSizeCircos.tuned,
-                             color.Y = colors)
+                              color.Y = colors, comp = as.numeric(input$circos.components.tuned),
+                              showIntraLinks = input$circos.intra.tuned, linkWidth = input$circos.linkwidth.tuned)
       } else {
         mixOmics::circosPlot(result.tuned(), cutoff = input$cutoffCircos.tuned, line = input$showLine.tuned, legend.title = title, 
-                             size.labels = input$datasetSizeCircos.tuned, size.variables = input$featureSizeCircos.tuned)
+                              size.labels = input$datasetSizeCircos.tuned, size.variables = input$featureSizeCircos.tuned,
+                              comp = as.numeric(input$circos.components.tuned), showIntraLinks = input$circos.intra.tuned,
+                              linkWidth = input$circos.linkwidth.tuned)
       }
     }
   }
