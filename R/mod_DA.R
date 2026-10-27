@@ -5,8 +5,7 @@ mod_Metadata_ui <- function(id) {
     fileInput(ns("file"), "Upload sample metadata (TSV / CSV)", accept = c(".tsv", ".txt", ".csv")),
     selectInput(ns("separator"), "Separator", c("Tab" = "tab", "Comma" = "comma", "Semicolon" = "semicolon")),
     actionButton(ns("load"), "Load metadata"),
-    actionButton(ns("example"), "Load example sample metadata"),
-    actionButton(ns("example_from_upload"), "Load example sample metadata (3-omics demo)"),
+    helpText("All three complete examples already include metadata. Choose an example in Data upload instead of loading metadata separately."),
     verbatimTextOutput(ns("status")),
     uiOutput(ns("editor")), actionButton(ns("apply_types"), "Apply metadata types and references"),
     selectInput(ns("class_column"), "Use this metadata column as class labels for PCA / PLS-DA / DIABLO", NULL),
@@ -37,13 +36,6 @@ mod_Metadata_server <- function(id, metadata, single_classes = NULL, multi_class
         status(paste("Loaded", nrow(metadata$data), "samples and", ncol(metadata$data), "metadata columns"))
       }, error = function(e) status(conditionMessage(e)))
     })
-    load_example_metadata <- function() {
-      metadata$data <- galaxy_read_table(system.file("extdata", "three-omics", "metadata.tsv", package = "Holomics"))
-      metadata$references <- list(Group = "Control")
-      status("Example sample metadata loaded: Group, age, sex, batch, subject_id")
-    }
-    observeEvent(input$example, { load_example_metadata() })
-    observeEvent(input$example_from_upload, { load_example_metadata() })
     output$editor <- renderUI({
       req(metadata$data)
       tagList(h4("Column types and reference levels"),
@@ -136,7 +128,7 @@ mod_DA_ui <- function(id) {
       selectInput(ns("categorical"), "Treat metadata columns as categorical", NULL, multiple = TRUE),
       selectInput(ns("numeric"), "Treat metadata columns as numeric", NULL, multiple = TRUE),
       textAreaInput(ns("reference_json"), 'Additional reference levels (JSON), e.g. {"sex":"F"}', "{}")),
-      actionButton(ns("preview"), "Preview design / coefficients"),
+       helpText("The design and coefficient choices update automatically. Review them before running."),
       selectInput(ns("coefficient"), "Coefficient to test (relative to reference)", NULL)),
       column(8, h3("3. Analysis options"),
         numericInput(ns("min_prevalence"), "Minimum non-zero sample fraction", 0.1, min = 0, max = 1, step = 0.05),
@@ -176,7 +168,7 @@ mod_DA_server <- function(id, single, metadata, da_results = NULL) {
       choices <- switch(input$type, continuous = c("Linear model", "limma", "Mixed model", "ComBat"),
         counts = c("DESeq2", "edgeR", "MaAsLin3", "ANCOM-BC2", "ComBat-seq"), relative = "MaAsLin3")
       current <- isolate(input$method)
-      updateSelectInput(session, "method", choices = choices, selected = if (current %in% choices) current else choices[1])
+      updateSelectInput(session, "method", choices = choices, selected = if (length(current) == 1L && current %in% choices) current else choices[1])
     })
     output$method_help <- renderUI({
       package <- switch(input$method, "Linear model" = "stats", "Mixed model" = "lmerTest", "MaAsLin3" = "maaslin3",
@@ -234,6 +226,18 @@ mod_DA_server <- function(id, single, metadata, da_results = NULL) {
       list(X = single$data[[input$block]]$omicsData, metadata = data, settings = settings)
     }
     preview <- reactiveVal(NULL)
+    observe({
+      tryCatch({
+        x <- prepared_inputs()
+        random <- input$method %in% c("Mixed model", "MaAsLin3", "ANCOM-BC2") && grepl("|", x$settings$formula, fixed = TRUE)
+        value <- da_prepare(x$X, x$metadata, x$settings$formula, input$type, x$settings$reference, random)
+        preview(value$design)
+        choices <- setdiff(colnames(value$design), "(Intercept)")
+        current <- isolate(input$coefficient)
+        selected <- if (length(current) == 1L && current %in% choices) current else choices[1]
+        updateSelectInput(session, "coefficient", choices = choices, selected = selected)
+      }, error = function(e) { preview(NULL) })
+    })
     design_snapshot <- reactiveVal(NULL)
     run_snapshot <- reactiveVal(NULL)
     design_fingerprint <- function(x) {
@@ -265,13 +269,15 @@ mod_DA_server <- function(id, single, metadata, da_results = NULL) {
         if (length(choices)) {
           sel <- if (!is.null(input$coefficient) && input$coefficient %in% choices) input$coefficient else choices[1]
           updateSelectInput(session, "coefficient", choices = choices, selected = sel)
+          if (!identical(x$settings$coefficient, sel))
+            stop("The design changed. Review the updated coefficient selection, then run again.")
         }
         status("Design validated.")
         fitted(NULL)
         value_fit <- da_run(x$X, x$metadata, x$settings)
         run_snapshot(snapshot())
         if (!is.null(da_results)) {
-          key <- paste(input$block, input$method, input$coefficient, sep = " · ")
+          key <- paste(input$block, input$method, x$settings$coefficient, sep = " · ")
           value_fit$block <- input$block
           value_fit$completed <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
           da_results$data[[key]] <- value_fit
@@ -280,11 +286,17 @@ mod_DA_server <- function(id, single, metadata, da_results = NULL) {
         status(paste(c(paste("Completed", input$method, "on", length(value_fit$sample_ids), "samples and", length(value_fit$tested_features), "features."), value_fit$warnings), collapse = "\n"))
       }, error = function(e) { fitted(NULL); preview(NULL); status(paste("Analysis failed:", conditionMessage(e))) })
     }
-    observeEvent(input$preview, { auto_preview_run() })
     observeEvent(input$run, { auto_preview_run() })
     output$design <- DT::renderDataTable({ req(preview()); preview() })
     output$status <- renderText(status())
     selected_table <- reactive({ req(fitted(), input$table); fitted()$tables[[input$table]] })
+    observe({
+      table <- selected_table()
+      plottable <- all(c("effect", "q_value") %in% names(table))
+      shinyjs::toggleState("plot", condition = plottable)
+      shinyjs::toggleState("send_plot", condition = plottable && galaxy_enabled())
+      shinyjs::toggleState("send_table", condition = galaxy_enabled())
+    })
     output$results <- DT::renderDataTable(selected_table(), options = list(scrollX = TRUE))
     draw <- function() {
       table <- selected_table()
@@ -294,7 +306,13 @@ mod_DA_server <- function(id, single, metadata, da_results = NULL) {
         pch = 16, xlab = "Effect (backend scale; see method)", ylab = "−log10 adjusted p-value")
       graphics::abline(h = -log10(fitted()$settings$alpha), lty = 2)
     }
-    output$volcano <- renderPlot(draw())
+    output$volcano <- renderPlot({
+      table <- selected_table()
+      if (!all(c("effect", "q_value") %in% names(table))) {
+        graphics::plot.new()
+        graphics::text(0.5, 0.5, "Native result table: generic volcano plot does not apply.\nInspect and export the selected table instead.")
+      } else draw()
+    })
     write_table <- function(file) utils::write.table(selected_table(), file, sep = "\t", row.names = FALSE, quote = FALSE)
     write_plot <- function(file) { grDevices::pdf(file, width = 10, height = 8); on.exit(grDevices::dev.off()); draw() }
     output$download <- downloadHandler(filename = "da_results.tsv", content = write_table)

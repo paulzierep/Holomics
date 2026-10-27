@@ -273,6 +273,8 @@ observe_diablo_ui_components <- function(ns, session, input, output, data, dataS
   
   # Observe tune button
   observeEvent(input$tune, {
+    useTunedVals(FALSE)
+    tunedVals$ncomp <- NULL
     if (!is.null(input$dataSelection)){
       tryCatch({
         tune_diablo_values(dataSelection, classSelection, result, tunedVals, input, output)
@@ -367,7 +369,7 @@ tune_diablo_values <- function(dataSelection, classSelection, result, tunedVals,
           test.keepX[[i]] = getTestKeepX(ncol(dataSelection$data[[i]]))
         }
         
-        BPPARAM <- BiocParallel::SnowParam(workers = galaxy_workers())
+        BPPARAM <- BiocParallel::SerialParam()
         tune.diablo = mixOmics::tune.block.splsda(X, Y, ncomp = ncomp, scale = input$scale,
                                                   test.keepX = test.keepX, design = design,
                                                   validation = 'Mfold', folds = getFolds(Y), nrepeat = 1,
@@ -462,6 +464,7 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   # Create reactive values
   comp.indiv <- getCompIndivReactive(input)
   comp.var <- getCompVarReactive(input)
+  comp.img <- getCompImgReactive(input)
 
   comp.diablo <- reactive({
     req(input$diablo.comp)
@@ -636,16 +639,16 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   
   plot.img.tuned <- function(){
     if(!is.null(result.tuned()) & length(dataSelection$data) > 1){
-      comp.img.tuned <- checkCompNcompCombination(result.tuned()$ncomp, comp.img.tuned())
+      components <- checkCompNcompCombination(result.tuned()$ncomp, comp.img.tuned())
       if (ncol(classSelection$data) == 3){
         colors = getGroupColors(classSelection$data)
-        mixOmics::cimDiablo(result.tuned(), comp = comp.img.tuned, 
+        mixOmics::cimDiablo(result.tuned(), comp = components,
                             margins=c(input$xmargin.tuned, input$ymargin.tuned),
                             row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
                             legend.position = "right",
                             size.legend = 1, color.Y = colors, trim = F)
       } else {
-        mixOmics::cimDiablo(result.tuned(), comp = comp.img.tuned,
+        mixOmics::cimDiablo(result.tuned(), comp = components,
                             margins=c(input$xmargin.tuned, input$ymargin.tuned),
                             row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
                             legend.position = "right",

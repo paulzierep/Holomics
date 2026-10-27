@@ -61,7 +61,8 @@ da_run <- function(X, metadata, settings) {
   random <- method %in% c("Mixed model", "MaAsLin3", "ANCOM-BC2") && grepl("|", settings$formula, fixed = TRUE)
   prepared <- da_prepare(X, metadata, settings$formula, settings$type, settings$reference, random)
   X <- prepared$X; metadata <- prepared$metadata; design <- prepared$design
-  if (settings$min_prevalence < 0 || settings$min_prevalence > 1) stop("Invalid prevalence")
+  if (length(settings$min_prevalence) != 1L || !is.finite(settings$min_prevalence) || settings$min_prevalence < 0 || settings$min_prevalence > 1) stop("Prevalence must be a finite fraction between 0 and 1")
+  if (length(settings$alpha) != 1L || !is.finite(settings$alpha) || settings$alpha <= 0 || settings$alpha > 1) stop("FDR threshold must be finite and greater than 0, up to 1")
   keep <- colMeans(X != 0) >= settings$min_prevalence & apply(X, 2, stats::var) > 0
   X <- X[, keep, drop = FALSE]
   if (ncol(X) < 2) stop("Fewer than two nonconstant features pass filtering")
@@ -117,7 +118,11 @@ da_run <- function(X, metadata, settings) {
       tables$results <- data.frame(feature = rownames(result), coefficient = coefficient, effect = result$logFC,
         p_value = result$PValue, q_value = result$FDR, result, check.names = FALSE)
     } else if (method == "MaAsLin3") {
+      if (identical(settings$maaslin_norm, "CLR") && !identical(settings$maaslin_transform, "NONE"))
+        stop("CLR already log-transforms abundances. Choose MaAsLin3 transformation NONE with CLR, or choose a different normalization; settings are not changed automatically.")
       da_require("maaslin3")
+      if (!requireNamespace("mirai", quietly = TRUE) || utils::packageVersion("mirai") < "2.5.0")
+        stop("MaAsLin3 requires mirai >= 2.5.0. Rebuild the analysis image with the compatible dependency; choose another method until it is updated.")
       directory <- tempfile("maaslin3-"); dir.create(directory)
       native <- maaslin3::maaslin3(input_data = as.data.frame(X), input_metadata = metadata,
         output = directory, formula = prepared$formula, normalization = settings$maaslin_norm,

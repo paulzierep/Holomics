@@ -5,9 +5,9 @@ These plots are **real computations on the bundled synthetic three-omics dataset
 ## Quick start and input selection
 
 1. Go to **Project & data → Load example data** and pick one of:
-   - **Load all example data (continuous)** — transformed demo values for PCA/PLS/DIABLO/limma/linear models
-   - **Load example data (raw counts)** — integer counts for DESeq2/edgeR/ANCOM-BC2/ComBat-seq
-   - **Load example data (relative abundance)** — fractions summing to 1 for compositional approaches
+   - **Continuous example** — transformed demo values for PCA/PLS/DIABLO/limma/linear models
+   - **Raw counts example** — integer counts for DESeq2/edgeR; synthetic microbiome-style counts can exercise ANCOM-BC2/MaAsLin3
+   - **Relative abundance example** — fractions summing to 1 for compositional approaches
    This loads the omics blocks, labels/metadata together.
 2. In **Project & data → Sample metadata**, review column types and reference levels.
 3. Labels are auto-loaded from metadata as **Metadata labels** for PCA/PLS-DA/DIABLO.
@@ -20,7 +20,28 @@ These plots are **real computations on the bundled synthetic three-omics dataset
 | Continuous, appropriately transformed measurements | PCA, PLS families, limma, linear/mixed models | Automatically log already-log-transformed data |
 | Batch-affected data | Prefer batch as a DA covariate; consider explicit ComBat / ComBat-seq preprocessing | Correct a perfectly confounded batch/treatment design or leak outcome-preserving correction into predictive evaluation |
 
-**The bundled measurements are continuous, already transformed demo values.** They are not valid count-method examples. The bundled `subject_id` has one observation per subject; it is not a repeated-measures example.
+The **Continuous example** is already transformed. The separate **Raw counts example** contains integers, and **Relative abundance example** contains fractions. Do not interchange their declared measurement types. The bundled `subject_id` has one observation per subject; it is not a repeated-measures example.
+
+### Route A — continuous measurements
+1. In **Project & data**, click **Continuous example**; review the metadata below.
+2. In **DA / statistics**, select `Example_continuous_transcriptomics`, continuous measurements, and **Linear model** (or **limma**).
+3. Choose `Group`, reference `Control`, covariates `age`, `sex`, `batch`, and coefficient `GroupTreatment_A`; click **Run analysis**.
+4. Inspect the results and volcano plot. Export the selected table and plot.
+5. In **Multi-omics**, select the three `Example_continuous_` blocks and **Metadata labels**, then inspect sample scores, correlation circles and **CIM**. Tuning is cross-validation, not proof of predictive accuracy.
+
+### Route B — raw integer counts
+1. Click **Raw counts example** in **Project & data**.
+2. In **DA / statistics**, select `Example_counts_transcriptomics`, raw integer counts, and **DESeq2** or **edgeR**.
+3. Select `Group`, reference `Control`, covariates `age`, `sex`, `batch`, and the treatment coefficient; click **Run analysis**.
+4. Inspect effect sizes and adjusted p-values, then export. Compare normalization choices explicitly; do not choose settings solely to maximize significance.
+5. For multivariate exploration, raw counts are not a substitute for appropriately normalized/transformed measurements. Prepare them explicitly before interpreting PCA/PLS/DIABLO.
+
+### Route C — relative abundances
+1. Click **Relative abundance example** in **Project & data**.
+2. In **DA / statistics**, select `Example_relative_transcriptomics`, relative abundance, and **MaAsLin3**.
+3. Choose the same group/reference/covariates. Review normalization and transformation, then click **Run analysis**.
+4. Inspect the native result tables. A native table without a standardized effect/q-value pair does not support the app's generic volcano plot.
+5. For multivariate analysis, account for compositionality explicitly; do not pass fractions to a count backend.
 
 ## 1. PCA / sparse PCA: explore one layer
 

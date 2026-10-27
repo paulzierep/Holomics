@@ -23,11 +23,10 @@ mod_Upload_ui <- function(id){
     fluidRow(
       bs4Dash::column(width = 12,
                       bs4Dash::box(title = "Load example data", width = 12, collapsed = FALSE,
-                                   actionButton(ns("load_example_all"), "Load all example data (continuous)"),
-                                   actionButton(ns("load_example_counts"), "Load example data (raw counts)"),
-                                   actionButton(ns("load_example_relative"), "Load example data (relative abundance)"),
-                                   actionButton(ns("load_example_omics"), "Load example omics data"),
-                                   actionButton(ns("load_example_labels"), "Load example labels / metadata"),
+                                   actionButton(ns("load_example_all"), "Continuous example"),
+                                   actionButton(ns("load_example_counts"), "Raw counts example"),
+                                   actionButton(ns("load_example_relative"), "Relative abundance example"),
+                                   helpText("Each example loads three distinct synthetic blocks and matching sample metadata. Re-loading replaces blocks with the same example names, not your other data. Metadata is shared across analyses."),
                                    helpText("Choose the data type appropriate for your analysis. Counts are for DESeq2/edgeR/ANCOM-BC2; continuous/transformed for limma/linear models; relative for compositional approaches.")
                       )
       )
@@ -349,15 +348,15 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
 
     upload_example_omics <- function(type = "continuous") {
       directory <- system.file("extdata", "three-omics", package = "Holomics")
-      files <- switch(type,
-        counts = c("counts/counts.tsv", "counts/counts.tsv", "counts/counts.tsv"),
-        relative = c("relative/relative.tsv", "relative/relative.tsv", "relative/relative.tsv"),
-        c("transcriptomics.tsv", "proteomics.tsv", "metabolomics.tsv")
-      )
       names_list <- c("transcriptomics", "proteomics", "metabolomics")
+      files <- paste0(names_list, ".tsv")
+      if (type != "continuous") files <- file.path(type, files)
       for (i in seq_along(names_list)) {
         data <- galaxy_read_table(file.path(directory, files[i]))
         block_name <- paste0("Example_", type, "_", names_list[i])
+        if (!is.null(tables$data) && nrow(tables$data)) {
+          tables$data <- tables$data[tables$data[, 1] != block_name, , drop = FALSE]
+        }
         if (!is.null(singleData)) singleData$data[[block_name]] <- list(omicsData = data, name = block_name)
         if (!is.null(multiData)) multiData$data[[block_name]] <- list(omicsData = data, name = block_name)
         tables$data <- extendDataTable(tables$data, block_name, basename(files[i]), nrow(data), ncol(data), FALSE, "both", block_name)
@@ -366,10 +365,10 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
 
     upload_example_labels <- function() {
       directory <- system.file("extdata", "three-omics", package = "Holomics")
-      df_classes <- galaxy_read_table(file.path(directory, "labels.tsv"))
+      df_classes <- galaxy_read_table(file.path(directory, "metadata.tsv"))[, "Group", drop = FALSE]
       classes <- data.frame(sample = rownames(df_classes), class = as.character(df_classes[[1]]), stringsAsFactors = FALSE)
       names(classes)[2] <- names(df_classes)[1]
-      label_name <- "Example labels"
+      label_name <- "Metadata labels"
       if (!is.null(singleClasses)) singleClasses$data[[label_name]] <- classes
       if (!is.null(multiClasses)) multiClasses$data[[label_name]] <- classes
       existing <- if (!is.null(tables$classes)) as.character(tables$classes[, 1]) else character()
@@ -388,20 +387,11 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
       invisible(NULL)
     }
 
-    observeEvent(input$load_example_omics, {
-      tryCatch(upload_example_omics("continuous"), error = function(e) getShinyErrorAlert(paste("Example omics load failed:", conditionMessage(e))))
-    })
     observeEvent(input$load_example_counts, {
       tryCatch({ upload_example_omics("counts"); upload_example_labels(); upload_example_metadata(metadata) }, error = function(e) getShinyErrorAlert(paste("Example counts load failed:", conditionMessage(e))))
     })
     observeEvent(input$load_example_relative, {
       tryCatch({ upload_example_omics("relative"); upload_example_labels(); upload_example_metadata(metadata) }, error = function(e) getShinyErrorAlert(paste("Example relative load failed:", conditionMessage(e))))
-    })
-    observeEvent(input$load_example_labels, {
-      tryCatch({
-        upload_example_labels()
-        upload_example_metadata(metadata)
-      }, error = function(e) getShinyErrorAlert(paste("Example labels load failed:", conditionMessage(e))))
     })
     observeEvent(input$load_example_all, {
       tryCatch({
@@ -412,4 +402,3 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
     })
   })
 }
-

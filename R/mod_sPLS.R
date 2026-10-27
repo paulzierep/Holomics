@@ -223,6 +223,8 @@ observe_spls_ui_components <- function(ns, input, output, data, dataSelection, c
   
   # Observe tune button
   observeEvent(input$tune, {
+    useTunedVals(FALSE)
+    tunedVals$ncomp <- NULL
     tryCatch({
       tune_values(dataSelection, result, tunedVals, input, output)
 
@@ -320,7 +322,7 @@ tune_values <- function(dataSelection, result, tunedVals, input, output){
         if (length(indices) == 1){
           ncomp <- perf.spls$measures$Q2.total$summary[indices, 2]
         } else {
-          ncomp <- perf.spls$measures$Q2.total$summary[indices[-1], 2]
+          ncomp <- max(perf.spls$measures$Q2.total$summary[indices[-1], 2])
         }
       }
       
@@ -328,7 +330,7 @@ tune_values <- function(dataSelection, result, tunedVals, input, output){
       
       #tune keepX
       list_keepX <- getTestKeepX(ncol(X))
-      BPPARAM <- BiocParallel::SnowParam(workers = galaxy_workers())
+      BPPARAM <- BiocParallel::SerialParam()
       
       finished <- F
       tryCatch({
@@ -605,8 +607,8 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
   
   plot.img <- function(){
     if(!is.null(result())){
-      comp.img <- checkCompNcompCombination(result()$ncomp, comp.img())
-      mixOmics::cim(result(), comp = comp.img, margins=c(input$xmargin, input$ymargin),
+      components <- checkCompNcompCombination(result()$ncomp, comp.img())
+      mixOmics::cim(result(), comp = components, margins=c(input$xmargin, input$ymargin),
                     row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
                     xlab = dataSelection$dataYName, ylab = dataSelection$dataXName)
     }
@@ -672,7 +674,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
       req(input$load.comp.tuned)
       req(input$load.ndisplay.tuned)
       names <- getDatasetNames(dataSelection$dataXName, dataSelection$dataYName)
-      if (input$load.ndisplay == "All"){
+      if (input$load.ndisplay.tuned == "All"){
         plotLoadings(resultTuned(), as.numeric(input$load.comp.tuned), 
                      subtitle = lapply(c(names$name1, names$name2),
                                        function(x) paste('Loadings on comp', input$load.comp.tuned, "\nBlock", x,"'")))
@@ -680,7 +682,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
         plotLoadings(resultTuned(), as.numeric(input$load.comp.tuned), 
                      subtitle = lapply(c(names$name1, names$name2),
                                        function(x) paste('Loadings on comp', input$load.comp.tuned, "\nBlock", x,"'")),
-                     ndisplay = as.numeric(input$load.ndisplay))
+                      ndisplay = as.numeric(input$load.ndisplay.tuned))
       }
     }
   }

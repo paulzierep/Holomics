@@ -9,7 +9,7 @@ workflow_guide_ui <- function() {
       style = "width:100%;max-width:1400px;height:auto;display:block;margin:1rem auto;"),
     bs4Dash::box(title = "Try the three-omics example in five steps", width = 12,
       tags$ol(
-         tags$li("Open Quick start → Load complete example. This loads all three layers, class labels and covariate metadata together."),
+         tags$li("Open Project & data and choose Continuous example, Raw counts example or Relative abundance example. Each loads three layers and matching sample metadata."),
          tags$li("Project & data → Sample metadata: review Group, age, sex, batch and subject_id; edit categorical/numeric types and reference levels if needed."),
         tags$li("Single-omics → PCA: select Example_transcriptomics and Example labels; fit two components and inspect scores/loadings."),
         tags$li("DA / statistics: choose continuous measurements, Linear model, Group as the variable of interest, Control as reference, and age/sex/batch as covariates. Preview the design; choose GroupTreatment_A; run."),

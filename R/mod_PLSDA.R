@@ -180,6 +180,8 @@ observe_plsda_ui_components <- function(ns, input, output, dataset, dataSelectio
   
   # Observe tune button
   observeEvent(input$tune, {
+    useTunedVals(FALSE)
+    tunedVals$ncomp <- NULL
     tryCatch({
       plsda_filterByLoadings(input, output, dataSelection, classSelection, result, tunedVals, multiDataset, tables)
       
@@ -233,7 +235,7 @@ plsda_filterByLoadings <- function(input, output, dataSelection, classSelection,
         sel_feature <- c(sel_feature, names(nonZeroEntries))
       }
       
-      feature_cols <- (names(dataSelection$data$omicsData) %in% sel_feature)
+      feature_cols <- (colnames(dataSelection$data$omicsData) %in% sel_feature)
       result <- dataSelection$data$omicsData[, feature_cols]
       multiDataset$data[[paste0(dataSelection$name, "_plsda_reduced")]] <- list(omicsData = result, name = dataSelection$data$name)
       

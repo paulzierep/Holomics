@@ -144,11 +144,11 @@ checkDataNcompCompatibility <- function(data, ncomp){
 #'
 #' @noRd
 checkCompNcompCombination <- function(ncomp, comp){
-  newComp <- comp
-  while(any(ncomp < max(newComp))){
-    newComp[which.max(newComp)] = ncomp
-  }
-  return(newComp)
+  limit <- min(ncomp)
+  shiny::validate(shiny::need(length(comp) > 0L && all(is.finite(comp)) &&
+    all(comp == as.integer(comp)) && all(comp >= 1L & comp <= limit),
+    paste("Select fitted components between 1 and", limit)))
+  return(comp)
 }
 
 #' @description adapter for the plotIndiv function of
@@ -201,61 +201,19 @@ plotIndiv <- function(result, classes, title = NULL, subtitle = NULL, legend.tit
 plotVar <- function(result, comp, varNames, legend = FALSE, pch, cutoff = 0, cex = 1) {
   comp <- checkCompNcompCombination(result$ncomp, comp)
   if (is.null(cex) || length(cex) == 0) cex <- 1
-  if (inherits(result, "block.splsda") || inherits(result, "block.plsda")) {
-    nblocks <- length(result$X)
-    if (is.list(cex)) {
-      if (length(cex) == 2 && all(sapply(cex, is.numeric))) {
-        # keep as is if already list of length 2 with vectors
-      } else if (length(cex) == nblocks) {
-        cex <- rep(cex[[1]], nblocks)
-      } else {
-        cex <- rep(1, nblocks)
-      }
-    } else if (is.numeric(cex)) {
-      if (length(cex) == nblocks) {
-        # keep
-      } else if (length(cex) == 1L) {
-        cex <- rep(cex[1], nblocks)
-      } else if (length(cex) == 2L && nblocks >= 2) {
-        cex <- rep(cex[1], nblocks)
-      } else {
-        cex <- rep(cex[1], nblocks)
-      }
-    } else {
-      cex <- rep(1, nblocks)
-    }
-  } else {
-    if (is.list(cex)) {
-      if (length(cex) >= 1 && is.numeric(cex[[1]])) {
-        cex <- cex[[1]]
-      } else {
-        cex <- 1
-      }
-    }
-    if (is.numeric(cex) && length(cex) != 1L) {
-      cex <- cex[1]
-    }
-    if (is.null(cex) || !is.numeric(cex)) cex <- 1
+  # plotVar expects one size per plotted block, including BOTH X and Y for
+  # two-table PLS/sPLS/rCCA. Discriminant models plot X only (not dummy Y).
+  nblocks <- if (inherits(result, c("sgcca", "rgcca"))) length(result$X) else
+    if (inherits(result, c("mixo_pls", "mixo_spls", "mixo_mlspls", "rcc")) && !inherits(result, "DA")) 2L else 1L
+  if (!is.list(cex)) {
+    if (!is.numeric(cex) || any(!is.finite(cex)) || any(cex <= 0)) stop("Plot size must be positive and finite")
+    if (length(cex) == 1L) cex <- rep(as.double(cex), nblocks)
+    if (length(cex) != nblocks) stop("Provide one plot size per plotted block")
+    cex <- as.double(cex)
   }
-  if (!missing(pch)){
-    tryCatch({
-      mixOmics::plotVar(result, comp = comp,
-                        var.names = varNames, pch = pch, cutoff = cutoff, cex = cex,
-                        legend = legend)
-    }, error = function(e) {
-      mixOmics::plotVar(result, comp = comp,
-                        var.names = varNames, pch = pch, cutoff = cutoff, cex = 1,
-                        legend = legend)
-    })
-  } else {
-    tryCatch({
-      mixOmics::plotVar(result, comp = comp,
-                        var.names = varNames, legend = legend, cutoff = cutoff, cex = cex)
-    }, error = function(e) {
-      mixOmics::plotVar(result, comp = comp,
-                        var.names = varNames, legend = legend, cutoff = cutoff, cex = 1)
-    })
-  }
+  args <- list(object = result, comp = comp, var.names = varNames, legend = legend, cutoff = cutoff, cex = cex)
+  if (!missing(pch)) args$pch <- pch
+  do.call(mixOmics::plotVar, args)
 }
 
 #' @description adapter for the plotLoadings function of
@@ -336,8 +294,10 @@ getDownloadHandler <- function(filename, contentfct, type = "png", width = 1800,
       content = function(file){
         if (type == "png"){
           png(file, width, height, res = 300)
+          on.exit(dev.off(), add = TRUE)
           contentfct()
           dev.off()
+          on.exit(NULL, add = FALSE)
         }else if (type == "csv"){
           if (is.null(tablefct)){
             write.csv2(contentfct(), file)

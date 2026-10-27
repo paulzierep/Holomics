@@ -56,6 +56,7 @@ Suggests:
     sva,
     lmerTest,
     maaslin3,
+    mirai (>= 2.5.0),
     ANCOMBC,
     bookdown,
     knitr,

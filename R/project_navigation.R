@@ -30,7 +30,7 @@ project_navigation_server <- function(input, session, output, single, metadata) 
   })
   output$project_readiness <- renderUI({
     blocks <- single$data
-    if (!length(blocks)) return(tags$div(class = "alert alert-info", "No data yet. Open Quick start → Load complete example, or Project & data to import your own tables."))
+    if (!length(blocks)) return(tags$div(class = "alert alert-info", "No data yet. Open Project & data and choose one of the three complete examples, or import your own tables."))
     meta <- metadata$data
     rows <- lapply(names(blocks), function(name) {
       x <- blocks[[name]]$omicsData

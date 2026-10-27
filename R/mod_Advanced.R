@@ -259,27 +259,7 @@ mod_Advanced_server <- function(id, single, multi, classes) {
         graphics::barplot(rev(x), names.arg = if (isTRUE(input$names)) rev(names(x)) else NULL,
           horiz = TRUE, las = 1, cex.names = input$size, main = paste(input$plot_block, "component", k), xlab = "Loading")
       } else if (type == "Correlation circle") {
-        cex <- input$size
-        if (is.null(cex) || length(cex) == 0) cex <- 1
-        if (inherits(model, "block.splsda") || inherits(model, "block.plsda")) {
-          nblocks <- length(model$X)
-          if (is.list(cex)) {
-            if (length(cex) == nblocks) cex <- unlist(cex)
-            else cex <- rep(cex[[1]], nblocks)
-          } else {
-            if (length(cex) == 1L) cex <- rep(cex, nblocks)
-            else if (length(cex) == 2L) cex <- rep(cex[1], nblocks)
-            else if (length(cex) != nblocks) cex <- rep(cex[1], nblocks)
-          }
-        } else {
-          if (is.list(cex)) cex <- cex[[1]]
-          if (is.numeric(cex) && length(cex) != 1L) cex <- cex[1]
-        }
-        tryCatch({
-          plotVar(model, c(k, k2), input$names, cutoff = input$cutoff, cex = cex)
-        }, error = function(e) {
-          plotVar(model, c(k, k2), input$names, cutoff = input$cutoff, cex = 1)
-        })
+        plotVar(model, c(k, k2), input$names, cutoff = input$cutoff, cex = input$size)
       } else if (type == "CIM heatmap") {
         f <- if (inherits(model, "block.splsda")) mixOmics::cimDiablo else mixOmics::cim
         f(model, comp = k, row.names = input$row_names, col.names = input$col_names,
