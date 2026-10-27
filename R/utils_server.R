@@ -200,9 +200,14 @@ plotIndiv <- function(result, classes, title = NULL, subtitle = NULL, legend.tit
 #' @noRd
 plotVar <- function(result, comp, varNames, legend = FALSE, pch, cutoff = 0, cex = 1) {
   comp <- checkCompNcompCombination(result$ncomp, comp)
-  if (inherits(result, "block.splsda") && length(cex) == 1L)
-    cex <- rep(cex, length(result$X))
-  
+  if (is.null(cex) || length(cex) == 0) cex <- 1
+  if (inherits(result, "block.splsda")) {
+    if (length(cex) == 1L) cex <- rep(cex[1], length(result$X))
+    else if (length(cex) != length(result$X)) cex <- rep(cex[1], length(result$X))
+  } else {
+    if (is.list(cex)) cex <- cex[[1]]
+    if (length(cex) != 1L) cex <- cex[1]
+  }
   if (!missing(pch)){
     mixOmics::plotVar(result, comp = comp,
                       var.names = varNames, pch = pch, cutoff = cutoff, cex = cex,

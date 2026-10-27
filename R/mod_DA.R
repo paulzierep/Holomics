@@ -262,12 +262,11 @@ mod_DA_server <- function(id, single, metadata, da_results = NULL) {
         preview(value$design)
         design_snapshot(design_fingerprint(x))
         choices <- setdiff(colnames(value$design), "(Intercept)")
-        if (length(choices) && (is.null(input$coefficient) || !input$coefficient %in% choices)) {
-          updateSelectInput(session, "coefficient", choices = choices, selected = choices[1])
-        } else if (length(choices)) {
-          updateSelectInput(session, "coefficient", choices = choices, selected = input$coefficient)
+        if (length(choices)) {
+          sel <- if (!is.null(input$coefficient) && input$coefficient %in% choices) input$coefficient else choices[1]
+          updateSelectInput(session, "coefficient", choices = choices, selected = sel)
         }
-        status("Design validated. Running analysis...")
+        status("Design validated.")
         fitted(NULL)
         value_fit <- da_run(x$X, x$metadata, x$settings)
         run_snapshot(snapshot())

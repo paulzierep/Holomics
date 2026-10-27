@@ -326,6 +326,25 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
       }
     })
 
+    observeEvent(input$viewSelectedData, {
+      if (is.null(input$dataTable_rows_selected)) return()
+      selRow <- as.numeric(input$dataTable_rows_selected)[1]
+      name <- as.character(tables$data[selRow, 1])
+      dat <- NULL
+      if (!is.null(singleData$data[[name]])) dat <- singleData$data[[name]]$omicsData
+      else if (!is.null(multiData$data[[name]])) dat <- multiData$data[[name]]$omicsData
+      if (is.null(dat)) return()
+      show <- dat
+      if (nrow(show) > 50) show <- show[1:50, , drop = FALSE]
+      if (ncol(show) > 20) show <- show[, 1:20, drop = FALSE]
+      output$dataViewer <- renderUI({
+        tagList(
+          h4(paste("Preview:", name, "- showing first 50 samples and first 20 features (if larger)")),
+          DT::renderDataTable(DT::datatable(data.frame(sample_id = rownames(show), show, check.names = FALSE), options = list(scrollX = TRUE)))
+        )
+      })
+    })
+
     upload_example_omics <- function() {
       directory <- system.file("extdata", "three-omics", package = "Holomics")
       for (name in c("transcriptomics", "proteomics", "metabolomics")) {

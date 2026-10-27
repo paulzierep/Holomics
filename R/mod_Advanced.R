@@ -259,7 +259,10 @@ mod_Advanced_server <- function(id, single, multi, classes) {
         graphics::barplot(rev(x), names.arg = if (isTRUE(input$names)) rev(names(x)) else NULL,
           horiz = TRUE, las = 1, cex.names = input$size, main = paste(input$plot_block, "component", k), xlab = "Loading")
       } else if (type == "Correlation circle") {
-        plotVar(model, c(k, k2), input$names, cutoff = input$cutoff, cex = input$size)
+        cex <- input$size
+        if (inherits(model, "block.splsda") && length(cex) == 1L) cex <- rep(cex, length(model$X))
+        else if (length(cex) != 1L) cex <- cex[1]
+        plotVar(model, c(k, k2), input$names, cutoff = input$cutoff, cex = cex)
       } else if (type == "CIM heatmap") {
         f <- if (inherits(model, "block.splsda")) mixOmics::cimDiablo else mixOmics::cim
         f(model, comp = k, row.names = input$row_names, col.names = input$col_names,
