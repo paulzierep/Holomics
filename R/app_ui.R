@@ -126,6 +126,8 @@ golem_add_external_resources <- function(){
     # for example, you can add shinyalert::useShinyalert() 
     
     tags$link(rel = "stylesheet", type ="text/css", href="www/css/custom.css"),
-    tags$link(rel = "stylesheet", type ="text/css", href="www/css/theme.css")
+    tags$link(rel = "stylesheet", type ="text/css", href="www/css/theme.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/css/plot-size.css"),
+    tags$script(src = "www/plot-size.js", defer = NA)
       )
 }
