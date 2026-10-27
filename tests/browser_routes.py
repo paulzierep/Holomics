@@ -46,8 +46,9 @@ def click(selector):
 def tab(name):
     # Expand the real sidebar menu where necessary.
     if name in ("PCA", "PLSDA"):
-        anchor = driver.find_element(By.CSS_SELECTOR, 'a[data-value="singleOmics"]')
-        if not driver.find_element(By.CSS_SELECTOR, f'a[data-value="{name}"]').is_displayed():
+        child = driver.find_element(By.CSS_SELECTOR, f'a[data-value="{name}"]')
+        anchor = child.find_element(By.XPATH, './ancestor::ul[1]/preceding-sibling::a')
+        if not child.is_displayed():
             anchor.click()
             time.sleep(0.5)
     click(f'a[data-value="{name}"]')

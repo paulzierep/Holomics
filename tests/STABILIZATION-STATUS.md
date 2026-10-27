@@ -44,6 +44,12 @@ eight selector regression checks pass. The v3 browser campaign is rerunning
 against the reinstalled preview. The v2 run was deliberately stopped, not
 counted as a completed campaign.
 
+The v3 run then passed **24 real-browser cases**: six example loader/reloader
+checks, six DA fits, six clicked table downloads, and six DIABLO plots,
+including **CIM**. It stopped at a harness-only sidebar locator before PCA;
+the locator has been corrected and v4 is running. No claim of browser tuning
+acceptance is made from v3.
+
 ## Execution caveats
 
 Two attempted test launches overlapped package installation and failed loading
