@@ -58,7 +58,8 @@ galaxy_import <- function(manifest, single, multi, single_classes, multi_classes
     block <- blocks[[i]]
     single$data[[block$name]] <- datasets[[i]]
     if (isTRUE(block$prepared)) multi$data[[block$name]] <- datasets[[i]]
-    tables$data <- extendDataTable(tables$data, block$name, basename(block$path),
+    filename <- if (!is.null(block$filename)) block$filename else basename(block$path)
+    tables$data <- extendDataTable(tables$data, block$name, filename,
       nrow(datasets[[i]]$omicsData), ncol(datasets[[i]]$omicsData), FALSE,
       if (isTRUE(block$prepared)) "both" else "single", block$name)
   }
