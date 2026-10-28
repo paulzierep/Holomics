@@ -328,7 +328,7 @@ tune_values <- function(dataSelection, result, tunedVals, input, output){
       
       #tune keepX
       list_keepX <- getTestKeepX(ncol(X))
-      BPPARAM <- BiocParallel::SnowParam(workers = parallel::detectCores()-1)
+      BPPARAM <- galaxy_parallel_param()
       
       finished <- F
       tryCatch({

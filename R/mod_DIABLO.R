@@ -366,7 +366,7 @@ tune_diablo_values <- function(dataSelection, classSelection, result, tunedVals,
           test.keepX[[i]] = getTestKeepX(ncol(dataSelection$data[[i]]))
         }
         
-        BPPARAM <- BiocParallel::SnowParam(workers = parallel::detectCores()-1)
+        BPPARAM <- galaxy_parallel_param()
         tune.diablo = mixOmics::tune.block.splsda(X, Y, ncomp = ncomp, scale = input$scale,
                                                   test.keepX = test.keepX, design = design,
                                                   validation = 'Mfold', folds = getFolds(Y), nrepeat = 1,

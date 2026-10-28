@@ -230,7 +230,7 @@ pca_filterByLoadings <- function(input, output, dataSelection, result, tunedVals
         grid.keepX <- getTestKeepX(ncol(dataSelection$data$omicsData))
         folds <- floor(nrow(dataSelection$data$omicsData)/3)
         
-        BPPARAM <- BiocParallel::SnowParam(workers = max(parallel::detectCores()-1, 2))
+        BPPARAM <- galaxy_parallel_param()
         suppressWarnings({
           tune.spca.result <- mixOmics::tune.spca(dataSelection$data$omicsData, ncomp = ncomp,
                                                   test.keepX = grid.keepX, scale = input$scale,

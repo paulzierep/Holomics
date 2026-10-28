@@ -1,3 +1,15 @@
+# Respect Galaxy's CPU allocation instead of detecting all host CPUs. A
+# one-slot job must not start socket workers (container hostnames may not resolve).
+galaxy_parallel_param <- function() {
+  slots <- Sys.getenv("GALAXY_SLOTS")
+  if (nzchar(slots)) {
+    workers <- suppressWarnings(as.integer(slots))
+    if (is.na(workers) || workers <= 1L) return(BiocParallel::SerialParam())
+    return(BiocParallel::SnowParam(workers = workers, type = "SOCK", manager.hostname = "127.0.0.1"))
+  }
+  BiocParallel::SnowParam(workers = max(1L, parallel::detectCores() - 1L, na.rm = TRUE))
+}
+
 # Load launcher inputs into the original application's reactive data stores.
 galaxy_read_table <- function(path, separator = "tab", transpose = FALSE) {
   sep <- switch(separator, tab = "\t", comma = ",", semicolon = ";",
