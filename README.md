@@ -1,85 +1,141 @@
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+# OmicsHarbor
 
-# Holomics
+<img align="right" src="inst/app/www/img/omicsharbor.svg" width="180" alt="OmicsHarbor: three omics layers meeting in a harbour">
 
-[![](https://www.r-pkg.org/badges/version/Holomics?color=orange)](https://cran.r-project.org/package=Holomics)
-[![](http://cranlogs.r-pkg.org/badges/grand-total/Holomics?color=blue)](https://cran.r-project.org/package=Holomics)
-[![License:
-GPL-3](https://img.shields.io/badge/license-GPL--3-lightgray.svg)](https://cran.r-project.org/web/licenses/GPL-3)
-[![Project Status: Active - The project has reached a stable, usable
-state and is being actively
-developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![](https://img.shields.io/github/last-commit/MolinLab/Holomics.svg)](https://github.com/MolinLab/Holomics/commits/main)
-[![](https://img.shields.io/badge/doi-10.1186/s12859--024--05719--4-yellow.svg)](https://doi.org/10.1186/s12859-024-05719-4)
+**A multi-omics analysis workspace by Paul Zierep, based on a fork of [Holomics](https://github.com/MolinLab/Holomics).**
 
-<img align="right" src="inst/app/www/img/logo.png" width=300>
+[![License: GPL >= 3](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE.md)
+[![Development branch](https://img.shields.io/badge/branch-omicsharbor--development-orange.svg)](https://github.com/paulzierep/Holomics/tree/omicsharbor-development)
 
-<b>Holomics</b> is an R Shiny application that enables users to perform
-single- and multi-omics analyses by providing a user-friendly interface
-to upload different omics datasets, select and run the implemented
-algorithms and finally visualize the generated results.
+OmicsHarbor extends the original Holomics R Shiny application with guided
+project setup, differential association analysis, an expanded mixOmics
+workbench and Galaxy integration. It retains the original single- and
+multi-omics workflows while providing a broader workspace for exploring
+matched omics measurements and sample metadata.
 
-<b>Holomics</b> is primarily built on the R package mixOmics, which
-offers numerous algorithms for the integrative analysis of omics
-datasets. From this repertoire, the single-omics algorithms “Principal
-Component Analysis” (PCA) and “Partial Least Squares Discriminant
-Analysis” (PLS-DA), the pairwise-omics analysis “sparse Partial Least
-Squares” (sPLS) and the multi-omics framework DIABLO (“Data Integration
-Analysis for Biomarker discovery using Latent variable approaches for
-Omics studies”) have been implemented in <b>Holomics</b>.
+This is an **independent development fork**, not an official Holomics release
+or an endorsement by its original authors. The application is named
+**OmicsHarbor**; the internal R package remains **`Holomics`** for compatibility.
+CRAN's Holomics release does **not** contain these fork-specific additions.
 
-## Installation
+## What's in this fork?
 
-### CRAN
+| Area | Capabilities |
+| --- | --- |
+| Project & data | Guided setup, example datasets, omics blocks, labels and sample metadata |
+| Single-omics | Original PCA and PLS-DA exploration, feature selection and tuning |
+| Pairwise integration | sPLS analysis of two matched omics layers |
+| Multi-omics integration | DIABLO integration, tuning and cross-layer visualizations |
+| Differential association | Covariate-aware interfaces for MaAsLin3, limma, edgeR, DESeq2, ANCOM-BC2 and linear/mixed models; availability depends on installed packages |
+| Advanced workbench | Additional mixOmics methods, including study-aware MINT routes |
+| Results & Galaxy | Plot/table exports, optional Galaxy data staging and workspace checkpoints |
 
-    install.packages("Holomics")
+See the in-app Help and worked examples for input requirements and method
+selection, and [GALAXY.md](GALAXY.md) for the Galaxy integration contract.
 
-### Github
+## Install and run
 
-    # Install devtools if it is not already installed
-    install.packages("devtools")
-    library(devtools)
+Install **this branch explicitly**; installing Holomics from CRAN or the upstream
+repository launches the original application instead.
 
-    # Install Holomics package 
-    install_github("https://github.com/MolinLab/Holomics")
+```r
+install.packages(c("remotes", "BiocManager"))
+BiocManager::install(c("mixOmics", "BiocParallel"), ask = FALSE)
+remotes::install_github(
+  "paulzierep/Holomics",
+  ref = "omicsharbor-development",
+  dependencies = NA,
+  upgrade = "never"
+)
+Holomics::run_app()
+```
 
-### Additional packages
+Use an R/Bioconductor combination compatible with the mixOmics version you
+install. The package's minimum R version alone is not a guarantee that all
+optional backends support that R version. The install above installs required
+dependencies, not every optional analysis backend.
 
-You need to install the Bioconductor package separately.
+For optional differential association methods, install the packages needed
+for your analysis in the same R library, for example:
 
-    if (!require("BiocManager", quietly = TRUE))
-        install.packages("BiocManager")
-    BiocManager::install("mixOmics")
-    BiocManager::install("BiocParallel")
+```r
+BiocManager::install(c("limma", "edgeR", "DESeq2", "sva", "ANCOMBC"), ask = FALSE)
+install.packages("lmerTest")
+```
 
-## Start application
+MaAsLin3 also requires its own installation and compatible dependencies; the
+tested MaAsLin3 1.5.8 setup requires `mirai >= 2.5.0`. See
+[the dependency repair script](tests/install-preview-dependencies.R) for the
+specific preview environment, not a universal installation recipe.
 
-Either with
+For reproducible analyses, record the exact Git commit, `sessionInfo()`, input
+preprocessing and analysis settings. This development branch is moving; pin a
+reviewed commit rather than relying on the branch name for a published analysis.
 
-    library(Holomics)
-    run_app()
+## First analysis
 
-or
+1. Open **Project & data** and load an example or your own omics tables.
+2. Check sample identifiers, table orientation, metadata and class labels.
+   Normalize or transform measurements appropriately for the chosen method.
+3. Start with **Single-omics → PCA** to inspect variation and potential outliers.
+4. Choose PLS-DA for supervised single-layer exploration, sPLS for two-layer
+   relationships, or DIABLO for supervised multi-layer integration.
+5. Use differential association when you need feature-wise effects adjusted
+   for covariates; use Advanced methods only when their data/design assumptions
+   match your study.
+6. Inspect diagnostics and export results together with their settings.
 
-    Holomics::run_app()
+Exploratory separation and tuned training results are **not independent
+predictive validation**. Avoid outcome leakage, use appropriate held-out or
+nested validation, and review convergence and model assumptions.
 
-## Workflow
+## Development and validation status
 
-To use all the features offered, the following workflow should be
-followed. First, datasets are uploaded, during which any necessary
-pre-filtering or transformation steps take place. Next, the user should
-proceed to the single-omics analysis, where key features are identified
-and the datasets are reduced accordingly. After completing the
-single-omics analyses, the user can apply multi-omics analyses to
-identify correlations between two or more datasets. NOTE: If
-pre-filtered datasets (ideally generated earlier using Holomics) have
-already been uploaded, it is possible to start directly with the
-multi-omics analysis.
+OmicsHarbor is under active development. Backend fits and selected browser
+workflows have been exercised, but this does **not** certify every method,
+parameter combination or Galaxy deployment. Advanced/MINT browser coverage
+remains incomplete, and some sPLS tuning candidates emit convergence warnings.
+Detailed evidence and outstanding limitations are recorded in
+[tests/STABILIZATION-STATUS.md](tests/STABILIZATION-STATUS.md).
 
-<img src="vignettes/images/workflow.png" width="100%" />
+### Two separate branches
 
-## Further information
+- **`omicsharbor-development`** — this enhanced OmicsHarbor workspace.
+- **`galaxy-it-adaptations`** — original Holomics with minimal Galaxy integration.
+  Its container and acceptance results must not be taken as an OmicsHarbor release.
 
-For further information on how to use Holomics please have a look at our
-<a href='https://CRAN.R-project.org/package=Holomics/vignettes/Holomics.html'>vignette</a>.
+## Authorship and upstream credit
+
+**OmicsHarbor development and fork-specific extensions: Paul Zierep
+([@paulzierep](https://github.com/paulzierep)).**
+
+OmicsHarbor is derived from **Holomics**, developed by **Katharina Munk and
+Eva M. Molin**, with contributions from **Lisa Ziemba** and **Günter Brader**.
+Original attribution and copyright notices are retained. The underlying
+statistical methods are provided by mixOmics and the other packages used in
+each analysis; please credit those authors too.
+
+## Citation
+
+Credit OmicsHarbor by Paul Zierep with its repository URL and exact commit.
+No separate OmicsHarbor publication or DOI is currently declared. Also cite:
+
+> Munk, K., Ilina, D., Ziemba, L., Brader, G. & Molin, E. M. (2024).
+> *Holomics — a user-friendly R shiny application for multi-omics data integration
+> and analysis.* BMC Bioinformatics.
+> [doi:10.1186/s12859-024-05719-4](https://doi.org/10.1186/s12859-024-05719-4)
+
+Include the appropriate citations for mixOmics and any differential association
+backends actually used.
+
+## Feedback and license
+
+Report **fork-specific issues** at
+[paulzierep/Holomics/issues](https://github.com/paulzierep/Holomics/issues), stating
+that you used `omicsharbor-development` and including your commit and R session
+information. Please do not send fork-only problems to the upstream authors.
+
+OmicsHarbor retains the upstream **GNU GPL version 3 or later** license.
+See [LICENSE.md](LICENSE.md).

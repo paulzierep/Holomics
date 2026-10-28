@@ -1,3 +1,15 @@
+# OmicsHarbor development fork
+
+* Independent fork by Paul Zierep, based on Holomics; internal package name
+  retained for compatibility. This is not an upstream Holomics release.
+* Guided project setup, worked examples and expanded mixOmics workbench.
+* Covariate-aware differential association interfaces and optional Galaxy
+  input/export/checkpoint integration.
+* Fork-specific README, branding, attribution and installation instructions.
+* Development evidence and known limitations: `tests/STABILIZATION-STATUS.md`.
+
+## Upstream Holomics release history
+
 # Holomics 1.2.0
 ## Improvements and fixes
 * Fixed errors with mixOmics version 6.32.0

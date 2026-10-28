@@ -1,8 +1,12 @@
-# Galaxy Interactive Tool baseline
+# OmicsHarbor — optional Galaxy integration
 
-This branch preserves the original Holomics analysis modules and standalone
-launcher. The optional integration activates only when `HOLOMICS_INPUT_DIR`
-is set by the Galaxy container launcher.
+This document describes the enhanced **OmicsHarbor** development fork by
+**Paul Zierep**, based on Holomics. The original modules and standalone launcher
+remain available alongside the new workbenches. The internal package and
+environment-variable prefix remain `Holomics` / `HOLOMICS_` for compatibility.
+Input staging activates when `HOLOMICS_INPUT_DIR` is set by a Galaxy launcher.
+The separately published minimal Holomics container uses
+`galaxy-it-adaptations`, not this branch; its release does not deploy OmicsHarbor.
 
 - `manifest.json` in that directory describes omics blocks and optional labels.
   Each block has `name`, `path`, `separator` (`tab`, `comma`, `semicolon`),
