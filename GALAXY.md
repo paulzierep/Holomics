@@ -12,11 +12,11 @@ otherwise follow the original single-omics reduction workflow. The original
 Upload data tab remains available. No project restore, extra modules or branding
 is added.
 
-When `HOLOMICS_OUTPUT_DIR` is set, downloading a result also stages a copy for
-Galaxy's results collection. With `API_KEY`, `HISTORY_ID` and `GALAXY_URL` supplied
-by the interactive-tool launcher, a Python helper also uploads it to the current
-history. The staged collection is collected after the session ends and is the
-fallback if the live upload fails. Browser downloads remain available.
+Every export has a Download button (browser only) and, when
+`HOLOMICS_OUTPUT_DIR` is set, a separate Send to Galaxy button. Only the latter
+stages a copy for Galaxy's results collection and starts a live upload using
+`API_KEY`, `HISTORY_ID` and `GALAXY_URL`. The staged collection is collected
+after the session ends and is the fallback if live upload fails.
 
 The launcher installs `galaxy-ie-helpers==0.3.0`. Outside Galaxy the hooks do
 nothing. No credentials are stored in the source or exported results.

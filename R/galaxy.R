@@ -89,7 +89,38 @@ galaxy_import_server <- function(single, multi, single_classes, multi_classes, t
   }, once = TRUE)
 }
 
-# Keep the original browser downloads; stage an additional copy only in Galaxy.
+# Separate browser downloads from explicit Galaxy sends for every export.
+galaxy_download_buttons <- function(outputId, label = "Download", ...) {
+  buttons <- shiny::downloadButton(outputId, paste("Download", sub("^Save ?", "", label)), ...)
+  if (!nzchar(Sys.getenv("HOLOMICS_OUTPUT_DIR"))) return(buttons)
+  shiny::tagList(buttons, shiny::actionButton(paste0(outputId, ".galaxy"),
+    paste("Send to Galaxy", sub("^Save ?", "", label)), icon = shiny::icon("upload")))
+}
+
+galaxy_download_handler <- function(filename, content, contentType = NULL, outputArgs = list()) {
+  observer <- NULL
+  render <- function(shinysession, name, ...) {
+    if (!is.null(observer)) observer$destroy()
+    if (nzchar(Sys.getenv("HOLOMICS_OUTPUT_DIR"))) {
+      observer <<- shiny::observeEvent(shinysession$input[[paste0(name, ".galaxy")]], {
+        path <- tempfile()
+        on.exit(unlink(path), add = TRUE)
+        tryCatch({
+          content(path)
+          export_name <- if (is.function(filename)) filename() else filename
+          destination <- galaxy_capture_download(path, export_name)
+          if (is.null(destination)) stop("Could not stage result")
+          shiny::showNotification("Result staged for Galaxy; live upload started if connected.", type = "message")
+        }, error = function(e) shiny::showNotification(
+          paste("Send to Galaxy failed:", conditionMessage(e)), type = "error", duration = NULL))
+      }, ignoreInit = TRUE, domain = shinysession)
+    }
+    shinysession$registerDownload(name, filename, contentType, content)
+  }
+  shiny::markRenderFunction(shiny::downloadButton, render, outputArgs, cacheHint = FALSE)
+}
+
+# Stage and upload only when the user explicitly clicks Send to Galaxy.
 galaxy_capture_download <- function(file, filename) {
   directory <- Sys.getenv("HOLOMICS_OUTPUT_DIR")
   if (!nzchar(directory)) return(invisible(NULL))

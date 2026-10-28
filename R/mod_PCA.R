@@ -72,7 +72,7 @@ mod_PCA_ui <- function(id){
                                                         fluidRow(
                                                           bs4Dash::column(width = 12,
                                                                           plotOutput(ns("Correlations")),
-                                                                          downloadButton(ns("Correlations.download"), "Save plot"))
+                                                                          galaxy_download_buttons(ns("Correlations.download"), "Save plot"))
                                                         )
                                                ),
                                                getScreePlot(ns, ".tuned"),
@@ -95,6 +95,7 @@ mod_PCA_server <- function(id, dataset, classes, multiDataset, tables){
     ns <- session$ns
     
     shinyjs::hide("Filter.download")
+    shinyjs::hide("Filter.download.galaxy")
     shinyjs::hide("tunedCol")
   
     dataSelection <- reactiveValues()
@@ -185,6 +186,7 @@ observe_pca_ui_components <- function(ns, input, output, dataset, dataSelection,
     useTunedVals(FALSE)
     shinyjs::hide("tunedCol")
     shinyjs::hide("Filter.download")
+    shinyjs::hide("Filter.download.galaxy")
   })
   
   # Observe tune button
@@ -195,6 +197,7 @@ observe_pca_ui_components <- function(ns, input, output, dataset, dataSelection,
       if (!is.null(tunedVals$ncomp)){
         shinyjs::show("tunedCol")
         shinyjs::show("Filter.download")
+        shinyjs::show("Filter.download.galaxy")
         useTunedVals(T)
       }
     }, error = function(cond){
@@ -574,14 +577,13 @@ generate_pca_plots <- function(ns, input, output, dataSelection, classSelection,
   output$Load.table.download.tuned <- getDownloadHandler("PCA_reduced_Loadingsplot.csv", contentfct = plot.load.tuned, type = "csv")
   output$SelVar.download.tuned <- getDownloadHandler("PCA_reduced_SelectedFeatures.csv", table.selVar.tuned, type = "csv")
   
-  output$Filter.download <- downloadHandler(
+  output$Filter.download <- galaxy_download_handler(
     filename = function() {
       paste0(dataName(), "_pca_reduced.xlsx")
     },
     content = function(file){
       openxlsx::write.xlsx(multiDataset$data[[paste0(dataName(), "_pca_reduced")]]$omicsData, 
                            file, rowNames = TRUE, colNames = TRUE)
-      galaxy_capture_download(file, paste0(dataName(), "_pca_reduced.xlsx"))
     }
   )
 

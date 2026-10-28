@@ -284,7 +284,7 @@ plotArrow <- function(result, classes, title, indNames, col) {
 getDownloadHandler <- function(filename, contentfct, type = "png", width = 1800, height = 1200, 
                                plot = NULL, tablefct = NULL, result = NULL, comp = NULL){
   return (
-    downloadHandler(
+    galaxy_download_handler(
       filename = filename,
       content = function(file){
         if (type == "png"){
@@ -313,7 +313,6 @@ getDownloadHandler <- function(filename, contentfct, type = "png", width = 1800,
           wb <- contentfct(result, comp)
           openxlsx::saveWorkbook(wb, file)
         }
-        galaxy_capture_download(file, filename)
       }
     )
   )

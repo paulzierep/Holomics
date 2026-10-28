@@ -148,7 +148,7 @@ diabloGenerateNetwork <- function(ns, postfix, result, dataset, cutoff, fullName
 #' @noRd
 diabloGetNetworkDownloadHandler <- function(filename, network, type){
   return(
-    downloadHandler(
+    galaxy_download_handler(
       filename = filename,
       content = function(file){
         if (type == "html"){
@@ -156,7 +156,6 @@ diabloGetNetworkDownloadHandler <- function(filename, network, type){
         } else if (type == "gml"){
           igraph::write.graph(network$mixNetwork$gR, file, format = "gml")
         }
-        galaxy_capture_download(file, filename)
       }
     )
   )

@@ -20,7 +20,7 @@ getsPLSSamplePlot <- function(ns, postfix = ""){
              fluidRow(
                bs4Dash::column(width = 12,
                                plotOutput(paste0(ns("Indiv"), postfix)),
-                               downloadButton(paste0(ns("Indiv.download"), postfix), "Save plot"))
+                               galaxy_download_buttons(paste0(ns("Indiv.download"), postfix), "Save plot"))
              )
     )
   )
@@ -42,11 +42,11 @@ getsPLSSelectedVarsPlot <- function(ns, postfix = ""){
                bs4Dash::tabBox(width = 12,
                                tabPanel("Dataset 1",
                                         DT::dataTableOutput(paste0(ns("X.Sel.Var"), postfix)),
-                                        downloadButton(paste0(ns("SelVarX.download"), postfix), "Save table")
+                                         galaxy_download_buttons(paste0(ns("SelVarX.download"), postfix), "Save table")
                                ),
                                tabPanel("Dataset 2",
                                         DT::dataTableOutput(paste0(ns("Y.Sel.Var"), postfix)),
-                                        downloadButton(paste0(ns("SelVarY.download"), postfix), "Save table")
+                                         galaxy_download_buttons(paste0(ns("SelVarY.download"), postfix), "Save table")
                                )
                )
              )
@@ -69,7 +69,7 @@ getsPLSTuningPlots <- function(ns){
                                         fluidRow(
                                           bs4Dash::column(width = 12,
                                             plotOutput(ns("Tuned.ncomp")),
-                                            downloadButton(ns("Tuned.ncomp.download"), "Save plot")
+                                             galaxy_download_buttons(ns("Tuned.ncomp.download"), "Save plot")
                                           )
                                         )
                                ),
@@ -78,7 +78,7 @@ getsPLSTuningPlots <- function(ns){
                                           bs4Dash::column(width = 12,
                                             textOutput(ns("Tuned.keepX.msg")),
                                             plotOutput(ns("Tuned.keepX")),
-                                            downloadButton(ns("Tuned.keepX.download"), "Save plot")
+                                             galaxy_download_buttons(ns("Tuned.keepX.download"), "Save plot")
                                           )
                                         )
                                ),
@@ -87,7 +87,7 @@ getsPLSTuningPlots <- function(ns){
                                           bs4Dash::column(width = 12,
                                             textOutput(ns("Tuned.keepY.msg")),
                                             plotOutput(ns("Tuned.keepY")),
-                                            downloadButton(ns("Tuned.keepY.download"), "Save plot")
+                                             galaxy_download_buttons(ns("Tuned.keepY.download"), "Save plot")
                                           )
                                         )
                                )

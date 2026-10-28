@@ -83,7 +83,7 @@ getFilterBox <- function(ns, name, infotext){
     bs4Dash::box(id = ns("filterBox"), width = 12,
                  getTuneButtonRow(ns, name, infotext),
                  fluidRow(style = "flex-direction: row",
-                          downloadButton(ns("Filter.download"), "Save reduced data", 
+                          galaxy_download_buttons(ns("Filter.download"), "Save reduced data", 
                                          style = "margin-top: 10px; width: 100%")
                  )
     )
@@ -151,7 +151,7 @@ getScreePlot <- function(ns, postfix = ""){
     tabPanel("Scree plot",       
              bs4Dash::column(width = 12,
                              plotOutput(paste0(ns("Scree"), postfix)), 
-                             downloadButton(paste0(ns("Scree.download"), postfix), "Save plot"))
+                             galaxy_download_buttons(paste0(ns("Scree.download"), postfix), "Save plot"))
     )
   )
 }
@@ -174,7 +174,7 @@ getSamplePlot <- function(ns, postfix = ""){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("indiv.error"), postfix)),
                                plotOutput(paste0(ns("Indiv"), postfix)),
-                               downloadButton(paste0(ns("Indiv.download"), postfix), "Save plot"))             
+                               galaxy_download_buttons(paste0(ns("Indiv.download"), postfix), "Save plot"))             
              )
     )
   )
@@ -198,7 +198,7 @@ getVariablePlot <- function(ns, postfix = ""){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("var.error"), postfix)),
                                plotOutput(paste0(ns("Var"), postfix)),
-                               downloadButton(paste0(ns("Var.download"), postfix), "Save plot"))         
+                               galaxy_download_buttons(paste0(ns("Var.download"), postfix), "Save plot"))         
              )
     )
   )
@@ -221,8 +221,8 @@ getLoadingsPlot <- function(ns, postfix = ""){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("load.error"), postfix)),
                                plotOutput(paste0(ns("Load"), postfix)),
-                               downloadButton(paste0(ns("Load.download"), postfix), "Save plot"),
-                               downloadButton(paste0(ns("Load.table.download"), postfix), "Save as table")
+                               galaxy_download_buttons(paste0(ns("Load.download"), postfix), "Save plot"),
+                               galaxy_download_buttons(paste0(ns("Load.table.download"), postfix), "Save as table")
                )
              )
     )
@@ -244,7 +244,7 @@ getSelectedVarsPlot <- function(ns, postfix = ""){
              fluidRow(
                bs4Dash::column(width = 12,
                                DT::dataTableOutput(paste0(ns("Sel.Var"), postfix)),
-                               downloadButton(paste0(ns("SelVar.download"), postfix), "Save table")
+                               galaxy_download_buttons(paste0(ns("SelVar.download"), postfix), "Save table")
                )
              )     
     )
@@ -272,8 +272,8 @@ getCimPlot <- function(ns, postfix = "", yMargin = 5){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("img.error"), postfix)),
                                plotOutput(paste0(ns("Img"), postfix)),
-                               downloadButton(paste0(ns("Img.download"), postfix), "Save plot"),
-                               downloadButton(paste0(ns("Img.table.download"), postfix), "Save as table")
+                               galaxy_download_buttons(paste0(ns("Img.download"), postfix), "Save plot"),
+                               galaxy_download_buttons(paste0(ns("Img.table.download"), postfix), "Save as table")
               )
              )
     )
@@ -296,7 +296,7 @@ getArrowPlot <- function(ns, postfix = ""){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("arrow.error"), postfix)),
                                plotOutput(paste0(ns("Arrow"), postfix)),
-                               downloadButton(paste0(ns("Arrow.download"), postfix), "Save plot"))
+                               galaxy_download_buttons(paste0(ns("Arrow.download"), postfix), "Save plot"))
     
                )
     )
@@ -319,7 +319,7 @@ getDiabloPlot <- function(ns, postfix = ""){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("diablo.error"), postfix)),
                                plotOutput(paste0(ns("Diablo"), postfix)),
-                               downloadButton(paste0(ns("Diablo.download"), postfix), "Save plot"))
+                               galaxy_download_buttons(paste0(ns("Diablo.download"), postfix), "Save plot"))
              )
     )
   )
@@ -355,8 +355,8 @@ getCircosPlot <- function(ns, postfix = ""){
                bs4Dash::column(width = 12,
                                textOutput(paste0(ns("circos.error"), postfix)),
                                plotOutput(paste0(ns("Circos"), postfix)),
-                               downloadButton(paste0(ns("Circos.download"), postfix), "Save plot"),
-                               downloadButton(paste0(ns("Circos.table.download"), postfix), "Save as table"))
+                               galaxy_download_buttons(paste0(ns("Circos.download"), postfix), "Save plot"),
+                               galaxy_download_buttons(paste0(ns("Circos.table.download"), postfix), "Save as table"))
              )
     )
   )
@@ -389,8 +389,8 @@ getNetworkPlot <- function(ns, postfix = ""){
                                    tags$text("Positive correlation")
                                  )
                                ),
-                               downloadButton(paste0(ns("NetworkGml.download"), postfix), "Save as gml"),
-                               downloadButton(paste0(ns("NetworkHtml.download"), postfix), "Save as html")
+                               galaxy_download_buttons(paste0(ns("NetworkGml.download"), postfix), "Save as gml"),
+                               galaxy_download_buttons(paste0(ns("NetworkHtml.download"), postfix), "Save as html")
                )
              )
     )
@@ -409,7 +409,7 @@ getErrorRatePlot <- function(ns){
              fluidRow(
                bs4Dash::column(width = 12,
                                plotOutput(ns("ErrorRate")),
-                               downloadButton(ns("ErrorRate.download"), "Save plot"))             
+                               galaxy_download_buttons(ns("ErrorRate.download"), "Save plot"))             
              )
     )
   )
