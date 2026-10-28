@@ -27,6 +27,7 @@ Depends:
     R (>= 4.0)
 biocViews:
 Imports:
+    jsonlite,
     bs4Dash (>= 2.0.2),
     config,
     dplyr,
