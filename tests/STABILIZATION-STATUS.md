@@ -1,5 +1,26 @@
 # Stabilization checkpoint — 2026-10-27
 
+## 2026-10-28 browser update
+
+OmicsHarbor development is preserved on `omicsharbor-development`; the
+`galaxy-it-adaptations` branch is being returned to upstream Holomics plus
+minimal Galaxy export integration. Further OmicsHarbor work belongs here.
+
+Advanced browser v1 completed with one failed fit assertion for sipca (status
+still named the preceding ipca fit). Its following plot/export checks may
+therefore describe the preceding model and are not sipca acceptance. Other
+tested non-MINT routes passed their fit/plot/export checks. MINT browser routes
+and exhaustive combinations remain unverified. Raw evidence is retained in
+`browser-evidence-advanced-v1/`.
+
+The v7 focused browser campaign completed with **44/44 checks passed**
+(exit 0). It repeats the v6 acceptance and additionally verifies the exact
+tuned sample, correlation-circle and loading outputs for both PCA and
+PLS-DA (six additional rendered plots). Evidence:
+`tests/browser-evidence-v7/results.json`, screenshots and downloads.
+The separate Advanced browser campaign is still pending; this result does
+not certify its routes or exhaustive parameter interactions.
+
 ## Confirmed
 
 - DA backend matrix: **65 populated successful fits**, **8 expected invalid

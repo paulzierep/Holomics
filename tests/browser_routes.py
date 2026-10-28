@@ -111,6 +111,50 @@ def check(name, action):
     (OUT / "results.json").write_text(json.dumps(results, indent=2))
     print(status, name, message, flush=True)
 
+def advanced_campaign():
+    driver.get("http://localhost:8083")
+    idle()
+    tab("upload")
+    check("Advanced load continuous", lambda: click("#upload-load_example_all"))
+    tab("advanced")
+    methods = ("pca", "spca", "ipca", "sipca", "pls", "spls", "plsda", "splsda", "rcc",
+               "block.pls", "block.spls", "block.plsda", "block.splsda")
+    for method in methods:
+        def fit(m=method):
+            select("advanced-method", m)
+            pair = m in ("pls", "spls", "rcc") or "block" in m
+            blocks = ["Example_continuous_transcriptomics"]
+            if pair:
+                blocks.append("Example_continuous_proteomics")
+            select("advanced-blocks", blocks)
+            select("advanced-labels", "Metadata labels")
+            click("#advanced-fit")
+            text = driver.find_element(By.ID, "advanced-status").text
+            assert f"Fitted {m} on" in text, text
+        check(f"Advanced fit {method}", fit)
+        plots = ["Scores", "Loadings", "Correlation circle"]
+        if method in ("pls", "spls", "block.splsda"):
+            plots.append("CIM heatmap")
+        if method == "block.splsda":
+            plots.extend(("DIABLO", "Circos"))
+        for plot in plots:
+            def render(p=plot):
+                select("advanced-plot", p)
+                wait.until(lambda d: any(e.is_displayed() and d.execute_script("return arguments[0].naturalWidth>0", e)
+                    for e in d.find_element(By.ID, "advanced-figure").find_elements(By.TAG_NAME, "img")))
+            check(f"Advanced {method} {plot}", render)
+            check(f"Advanced {method} {plot} PDF", lambda: download("advanced-plot_pdf"))
+        for id_ in ("feature_tsv", "model_rds"):
+            check(f"Advanced {method} {id_}", lambda i=id_: download(f"advanced-{i}"))
+
+if os.getenv("ADVANCED_ONLY") == "1":
+    try:
+        advanced_campaign()
+    finally:
+        (OUT / "browser-log.json").write_text(json.dumps(driver.get_log("browser"), indent=2))
+        driver.quit()
+    raise SystemExit(int(any(r["status"] == "FAIL" for r in results)))
+
 try:
     driver.get("http://localhost:8083")
     idle()
@@ -196,6 +240,9 @@ try:
             assert any(c.isdigit() and c != "0" for c in text), text
         check(f"{route} tuned parameter", tuned)
         dismiss_notifications()
+        if route in ("PCA", "PLSDA"):
+            for title in ("Sample plot", "Correlation circle plot", "Loading plot"):
+                check(f"{route} tuned {title}", lambda r=route, t=title: plot_tab(r, t, tuned=True))
         if route in ("sPLS", "DIABLO"):
             check(f"{route} tuning to CIM", lambda r=route: plot_tab(r, "CIM", tuned=True))
             for id_ in ("Img.download.tuned", "Img.table.download.tuned"):
