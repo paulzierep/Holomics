@@ -191,9 +191,7 @@ getVariablePlot <- function(ns, postfix = ""){
     tabPanel("Correlation circle plot",
              fluidRow(style = "display: flex; column-gap: 1rem",
                       uiOutput(paste0(ns("var.x.comp"), postfix)),
-                       uiOutput(paste0(ns("var.y.comp"), postfix)),
-                       numericInput(paste0(ns("var.cutoff"), postfix), "Minimum correlation-circle radius", value = 0, min = 0, max = 1, step = 0.05),
-                       numericInput(paste0(ns("var.size"), postfix), "Feature label / point size", value = 1, min = 0.2, max = 3, step = 0.1),
+                      uiOutput(paste0(ns("var.y.comp"), postfix)),
                       awesomeCheckbox(paste0(ns("var.names"), postfix), "Feature names", value = FALSE)
              ),
              fluidRow(
@@ -216,8 +214,8 @@ getLoadingsPlot <- function(ns, postfix = ""){
   return(
     tabPanel("Loading plot",
              fluidRow(style = "display: flex; column-gap: 1rem",
-                uiOutput(paste0(ns("load.comp.ui"), postfix)),
-                uiOutput(paste0(ns("load.ndisplay.ui"), postfix)),
+               uiOutput(paste0(ns("load.comp"), postfix)),
+               uiOutput(paste0(ns("load.ndisplay"), postfix)),
              ),
              fluidRow(
                bs4Dash::column(width = 12,
@@ -240,9 +238,8 @@ getLoadingsPlot <- function(ns, postfix = ""){
 getSelectedVarsPlot <- function(ns, postfix = ""){
   return(
     tabPanel("Selected features",
-             helpText("Model-selected features and loadings, not significance tests. Sparse fits select non-zero loadings; ordinary PCA/PLS fits may retain all features. No feature-level p-values or FDR are computed."),
              fluidRow(
-                uiOutput(paste0(ns("sel.var.comp.ui"), postfix))
+               uiOutput(paste0(ns("sel.var.comp"), postfix))
              ),
              fluidRow(
                bs4Dash::column(width = 12,
@@ -265,10 +262,7 @@ getCimPlot <- function(ns, postfix = "", yMargin = 5){
   return(
     tabPanel("CIM",
              fluidRow(style = "display: flex; column-gap: 1rem",
-                 uiOutput(paste0(ns("img.comp.ui"), postfix)),
-                awesomeCheckbox(paste0(ns("heatmap.rows"), postfix), "Show row names", value = TRUE),
-                awesomeCheckbox(paste0(ns("heatmap.columns"), postfix), "Show column names", value = TRUE),
-                awesomeCheckbox(paste0(ns("heatmap.transpose"), postfix), "Transpose heatmap", value = FALSE),
+               uiOutput(paste0(ns("img.comp"), postfix)),
                numericInput(paste0(ns("xmargin"), postfix), label = "X-Margin:", value = 5, 
                             min = 1, max = 20, step = 1),
                numericInput(paste0(ns("ymargin"), postfix), label = "Y-Margin:", value = yMargin, 
@@ -319,7 +313,7 @@ getDiabloPlot <- function(ns, postfix = ""){
   return (
     tabPanel("Diablo plot",
              fluidRow(
-                uiOutput(paste0(ns("diablo.comp.ui"), postfix))
+               uiOutput(paste0(ns("diablo.comp"), postfix))
              ),
              fluidRow(
                bs4Dash::column(width = 12,
@@ -341,14 +335,8 @@ getCircosPlot <- function(ns, postfix = ""){
   return (
     tabPanel("Circos plot",
              fluidRow(
-               uiOutput(paste0(ns("circos.components"), postfix)),
-               awesomeCheckbox(paste0(ns("circos.intra"), postfix), "Show within-block links", value = FALSE),
-               numericInput(paste0(ns("circos.linkwidth"), postfix), "Link width", value = 1, min = 0.2, max = 5, step = 0.2)
-             ),
-             helpText("Links show model-based associations, not p-values or FDR-significant relationships."),
-             fluidRow(
                bs4Dash::column(width = 3,
-                 numericInput(paste0(ns("cutoffCircos"), postfix), "Minimum absolute association",
+                numericInput(paste0(ns("cutoffCircos"), postfix), "Cutoff value",
                             min = 0, max = 1, step = 0.1, value = 0.7)
                ),
                bs4Dash::column(width = 4,
@@ -386,7 +374,7 @@ getNetworkPlot <- function(ns, postfix = ""){
              fluidRow(style = "column-gap: 1rem",
                       numericInput(paste0(ns("cutoffNetwork"), postfix), "Cutoff value",
                                    min = 0, max = 1, step = 0.1, value = 0.5),
-                       uiOutput(paste0(ns("nodes.ui"), postfix)),
+                      uiOutput(paste0(ns("nodes"), postfix)),
                       awesomeCheckbox(paste0(ns("fullName"), postfix), "Show full names")
              ),
              fluidRow(
@@ -480,20 +468,20 @@ renderVarComps <- function(ns, input, output, tuned = FALSE, tunedInput = NULL){
 #'
 #' @noRd
 renderLoadComp <- function(ns, input, output, tuned = FALSE, tunedInput = NULL){
-  output$load.comp.ui <- renderUI({
+  output$load.comp <- renderUI({
     selectInput(ns("load.comp"), "Component:", seq(1, input$ncomp, 1))
   })
   
-  output$load.ndisplay.ui <- renderUI({
+  output$load.ndisplay <- renderUI({
     selectInput(ns("load.ndisplay"), "Top-N entries:", c("All", 5, 10, 15, 20, 25))
   })
   
   if (tuned) {
-    output$load.comp.ui.tuned <- renderUI({
+    output$load.comp.tuned <- renderUI({
       selectInput(ns("load.comp.tuned"), "Component:", seq(1, tunedInput$ncomp, 1))
     })
     
-    output$load.ndisplay.ui.tuned <- renderUI({
+    output$load.ndisplay.tuned <- renderUI({
       selectInput(ns("load.ndisplay.tuned"), "Top-N entries:", c("All", 5, 10, 15, 20, 25))
     })
   }
@@ -504,12 +492,12 @@ renderLoadComp <- function(ns, input, output, tuned = FALSE, tunedInput = NULL){
 #'
 #' @noRd
 renderSelVarComp <- function(ns, input, output, tuned = FALSE, tunedInput = NULL){
-  output$sel.var.comp.ui <- renderUI({
+  output$sel.var.comp <- renderUI({
     selectInput(ns("sel.var.comp"), "Component:", seq(1, input$ncomp, 1))
   })
   
   if (tuned) {
-    output$sel.var.comp.ui.tuned <- renderUI({
+    output$sel.var.comp.tuned <- renderUI({
       selectInput(ns("sel.var.comp.tuned"), "Component:", seq(1, tunedInput$ncomp, 1))
     })
   }
@@ -520,12 +508,12 @@ renderSelVarComp <- function(ns, input, output, tuned = FALSE, tunedInput = NULL
 #'
 #' @noRd
 renderImgComp <- function(ns, input, output, tuned = FALSE, tunedInput = NULL){
-  output$img.comp.ui <- renderUI({
+  output$img.comp <- renderUI({
     selectInput(ns("img.comp"), "Component:", seq(1, input$ncomp, 1))
   })
   
   if (tuned){
-    output$img.comp.ui.tuned <- renderUI({
+    output$img.comp.tuned <- renderUI({
       selectInput(ns("img.comp.tuned"), "Component:", seq(1, tunedInput$ncomp, 1))
     })
   } 

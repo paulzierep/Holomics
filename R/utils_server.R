@@ -87,11 +87,11 @@ getCompVarReactive <- function(input, tuned = FALSE){
       if (tuned){
         req(input$var.x.tuned)
         req(input$var.y.tuned)
-        return(as.numeric(c(input$var.x.tuned,input$var.y.tuned)))
+        comp.var.tuned <- as.numeric(c(input$var.x.tuned,input$var.y.tuned))
       } else {
         req(input$var.x)
         req(input$var.y)
-        return(as.numeric(c(input$var.x,input$var.y)))
+        comp.var <- as.numeric(c(input$var.x,input$var.y))
       }
     })
   )
@@ -108,10 +108,10 @@ getCompImgReactive <- function(input, tuned = FALSE){
     reactive({
       if (tuned) {
         req(input$img.comp.tuned)
-        return(as.numeric(input$img.comp.tuned))
+        comp.img.tuned <- as.numeric(input$img.comp.tuned)
       } else {
         req(input$img.comp)
-        return(as.numeric(input$img.comp))
+        comp.img <- as.numeric(input$img.comp)
       }
     })
   )
@@ -144,11 +144,11 @@ checkDataNcompCompatibility <- function(data, ncomp){
 #'
 #' @noRd
 checkCompNcompCombination <- function(ncomp, comp){
-  limit <- min(ncomp)
-  shiny::validate(shiny::need(length(comp) > 0L && all(is.finite(comp)) &&
-    all(comp == as.integer(comp)) && all(comp >= 1L & comp <= limit),
-    paste("Select fitted components between 1 and", limit)))
-  return(comp)
+  newComp <- comp
+  while(any(ncomp < max(newComp))){
+    newComp[which.max(newComp)] = ncomp
+  }
+  return(newComp)
 }
 
 #' @description adapter for the plotIndiv function of
@@ -198,22 +198,17 @@ plotIndiv <- function(result, classes, title = NULL, subtitle = NULL, legend.tit
 #' @return Correlation Circle plot
 #'
 #' @noRd
-plotVar <- function(result, comp, varNames, legend = FALSE, pch, cutoff = 0, cex = 1) {
+plotVar <- function(result, comp, varNames, legend = FALSE, pch) {
   comp <- checkCompNcompCombination(result$ncomp, comp)
-  if (is.null(cex) || length(cex) == 0) cex <- 1
-  # plotVar expects one size per plotted block, including BOTH X and Y for
-  # two-table PLS/sPLS/rCCA. Discriminant models plot X only (not dummy Y).
-  nblocks <- if (inherits(result, c("sgcca", "rgcca"))) length(result$X) else
-    if (inherits(result, c("mixo_pls", "mixo_spls", "mixo_mlspls", "rcc")) && !inherits(result, "DA")) 2L else 1L
-  if (!is.list(cex)) {
-    if (!is.numeric(cex) || any(!is.finite(cex)) || any(cex <= 0)) stop("Plot size must be positive and finite")
-    if (length(cex) == 1L) cex <- rep(as.double(cex), nblocks)
-    if (length(cex) != nblocks) stop("Provide one plot size per plotted block")
-    cex <- as.double(cex)
+  
+  if (!missing(pch)){
+    mixOmics::plotVar(result, comp = comp,
+                      var.names = varNames, pch = pch,
+                      legend = legend)
+  } else {
+    mixOmics::plotVar(result, comp = comp,
+                      var.names = varNames, legend = legend)
   }
-  args <- list(object = result, comp = comp, var.names = varNames, legend = legend, cutoff = cutoff, cex = cex)
-  if (!missing(pch)) args$pch <- pch
-  do.call(mixOmics::plotVar, args)
 }
 
 #' @description adapter for the plotLoadings function of
@@ -294,10 +289,8 @@ getDownloadHandler <- function(filename, contentfct, type = "png", width = 1800,
       content = function(file){
         if (type == "png"){
           png(file, width, height, res = 300)
-          on.exit(dev.off(), add = TRUE)
           contentfct()
           dev.off()
-          on.exit(NULL, add = FALSE)
         }else if (type == "csv"){
           if (is.null(tablefct)){
             write.csv2(contentfct(), file)

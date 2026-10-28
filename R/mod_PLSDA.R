@@ -172,7 +172,7 @@ observe_plsda_ui_components <- function(ns, input, output, dataset, dataSelectio
     classSelection$data <- classes$data[[input$classSelection]]
   })
   
-  observeEvent(list(dataSelection$data, classSelection$data, input$scale, input$ncomp), {
+  observeEvent(dataSelection$data, {
     useTunedVals(FALSE)
     shinyjs::hide("tunedCol")
     shinyjs::hide("Filter.download")
@@ -180,8 +180,6 @@ observe_plsda_ui_components <- function(ns, input, output, dataset, dataSelectio
   
   # Observe tune button
   observeEvent(input$tune, {
-    useTunedVals(FALSE)
-    tunedVals$ncomp <- NULL
     tryCatch({
       plsda_filterByLoadings(input, output, dataSelection, classSelection, result, tunedVals, multiDataset, tables)
       
@@ -235,7 +233,7 @@ plsda_filterByLoadings <- function(input, output, dataSelection, classSelection,
         sel_feature <- c(sel_feature, names(nonZeroEntries))
       }
       
-      feature_cols <- (colnames(dataSelection$data$omicsData) %in% sel_feature)
+      feature_cols <- (names(dataSelection$data$omicsData) %in% sel_feature)
       result <- dataSelection$data$omicsData[, feature_cols]
       multiDataset$data[[paste0(dataSelection$name, "_plsda_reduced")]] <- list(omicsData = result, name = dataSelection$data$name)
       
@@ -394,7 +392,7 @@ generate_plsda_plots <- function(ns, input, output, dataSelection, classSelectio
   
   plot.var <- function(){
     if (!is.null(result())){
-      plotVar(result(), comp.var(), input$var.names, cutoff = input$var.cutoff, cex = input$var.size)
+      plotVar(result(), comp.var(), input$var.names)
     }
   }
   
@@ -456,7 +454,7 @@ generate_plsda_plots <- function(ns, input, output, dataSelection, classSelectio
           "There need to be at least two components to render this plot!"
         })
       } else {
-        plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned, cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
+        plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned)
       }
     }
   }

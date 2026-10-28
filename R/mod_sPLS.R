@@ -213,7 +213,7 @@ observe_spls_ui_components <- function(ns, input, output, data, dataSelection, c
   
   # Observe change of data
   observeDataset <- reactive({
-    list(dataSelection$dataX, dataSelection$dataY, classSelection$data, input$scale, input$ncomp, input$mode)
+    list(dataSelection$dataX, dataSelection$dataY)
   })
   
   observeEvent(observeDataset(), {
@@ -223,8 +223,6 @@ observe_spls_ui_components <- function(ns, input, output, data, dataSelection, c
   
   # Observe tune button
   observeEvent(input$tune, {
-    useTunedVals(FALSE)
-    tunedVals$ncomp <- NULL
     tryCatch({
       tune_values(dataSelection, result, tunedVals, input, output)
 
@@ -322,7 +320,7 @@ tune_values <- function(dataSelection, result, tunedVals, input, output){
         if (length(indices) == 1){
           ncomp <- perf.spls$measures$Q2.total$summary[indices, 2]
         } else {
-          ncomp <- max(perf.spls$measures$Q2.total$summary[indices[-1], 2])
+          ncomp <- perf.spls$measures$Q2.total$summary[indices[-1], 2]
         }
       }
       
@@ -330,7 +328,7 @@ tune_values <- function(dataSelection, result, tunedVals, input, output){
       
       #tune keepX
       list_keepX <- getTestKeepX(ncol(X))
-      BPPARAM <- BiocParallel::SerialParam()
+      BPPARAM <- BiocParallel::SnowParam(workers = parallel::detectCores()-1)
       
       finished <- F
       tryCatch({
@@ -582,7 +580,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
     if(!is.null(result())){
       names <- getDatasetNames(dataSelection$dataXName, dataSelection$dataYName)
       plotVar(result(), comp.var(), input$var.names,
-            pch = c(1,2), legend = c(names$name1, names$name2), cutoff = input$var.cutoff, cex = input$var.size)
+            pch = c(1,2), legend = c(names$name1, names$name2))
     }
   }
   
@@ -607,9 +605,8 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
   
   plot.img <- function(){
     if(!is.null(result())){
-      components <- checkCompNcompCombination(result()$ncomp, comp.img())
-      mixOmics::cim(result(), comp = components, margins=c(input$xmargin, input$ymargin),
-                    row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
+      comp.img <- checkCompNcompCombination(result()$ncomp, comp.img())
+      mixOmics::cim(result(), comp = comp.img, margin=c(input$xmargin, input$ymargin), 
                     xlab = dataSelection$dataYName, ylab = dataSelection$dataXName)
     }
   }
@@ -665,7 +662,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
   plot.var.tuned <- function(){
     if (!is.null(resultTuned())){
       plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned,
-              pch = c(1,2), legend = TRUE, cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
+              pch = c(1,2), legend = TRUE)
     }
   }
   
@@ -674,7 +671,7 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
       req(input$load.comp.tuned)
       req(input$load.ndisplay.tuned)
       names <- getDatasetNames(dataSelection$dataXName, dataSelection$dataYName)
-      if (input$load.ndisplay.tuned == "All"){
+      if (input$load.ndisplay == "All"){
         plotLoadings(resultTuned(), as.numeric(input$load.comp.tuned), 
                      subtitle = lapply(c(names$name1, names$name2),
                                        function(x) paste('Loadings on comp', input$load.comp.tuned, "\nBlock", x,"'")))
@@ -682,15 +679,14 @@ generate_spls_plots <- function(ns, input, output, dataSelection, classSelection
         plotLoadings(resultTuned(), as.numeric(input$load.comp.tuned), 
                      subtitle = lapply(c(names$name1, names$name2),
                                        function(x) paste('Loadings on comp', input$load.comp.tuned, "\nBlock", x,"'")),
-                      ndisplay = as.numeric(input$load.ndisplay.tuned))
+                     ndisplay = as.numeric(input$load.ndisplay))
       }
     }
   }
   
   plot.img.tuned <- function(){
     if (!is.null(resultTuned())){
-      mixOmics::cim(resultTuned(), comp = comp.img.tuned(), margins=c(input$xmargin.tuned, input$ymargin.tuned),
-                    row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
+      mixOmics::cim(resultTuned(), comp = comp.img.tuned(), margin=c(input$xmargin.tuned, input$ymargin.tuned),
                     xlab = dataSelection$dataYName, ylab = dataSelection$dataXName)
     }
   }

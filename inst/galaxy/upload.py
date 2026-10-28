@@ -1,6 +1,6 @@
-"""Upload an explicitly exported result; retain the staged copy on failure."""
-import sys
+"""Upload a result copy; the staged file remains available if upload fails."""
 import os
+import sys
 
 from galaxy_ie_helpers import get_galaxy_connection
 

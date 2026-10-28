@@ -1,24 +1,17 @@
-# Galaxy Interactive Tool baseline
+# Holomics in Galaxy
 
-This branch preserves the original Holomics analysis modules and standalone
-launcher. The optional integration activates only when `HOLOMICS_INPUT_DIR`
-is set by the Galaxy container launcher.
+This branch retains the original Holomics application at upstream `24129f9`.
+The only application changes are export hooks in the existing download handlers.
+Authors, license, interface, import and analysis workflows remain unchanged.
 
-- `manifest.json` in that directory describes omics blocks and optional labels.
-  Each block has `name`, `path`, `separator` (`tab`, `comma`, `semicolon`),
-  `transpose` and `prepared` fields.
-- Import validates finite numeric measurements and unique identifiers, requires
-  matching sample sets, and reorders rows by sample ID. It does not normalize,
-  filter or silently intersect the staged measurements.
-- Already-prepared blocks may be made available in the original multi-omics
-  store. Other blocks follow the original single-omics reduction workflow.
-- Existing downloads also stage a copy in `HOLOMICS_OUTPUT_DIR` and attempt
-  background upload to the current Galaxy history. Browser downloads still work.
-- The data workspace is checkpointed atomically to `HOLOMICS_PROJECT_OUTPUT`.
-  Restore it by staging the file as `HOLOMICS_INPUT_DIR/project.rds` on launch.
-  Imported/reduced datasets and labels are preserved; fitted models and UI
-  settings are not serialized in this baseline.
-- Parallel tuning respects `GALAXY_SLOTS` when set.
+Use the original Upload data tab (or its examples) to load data. No automatic
+Galaxy import, project restore, extra analysis modules or branding is added.
 
-The packaging, fixtures and regression tests live in
-`usegalaxy-eu/microbiome-ITs/holomics/`.
+When `HOLOMICS_OUTPUT_DIR` is set, downloading a result also stages a copy for
+Galaxy's results collection. With `API_KEY`, `HISTORY_ID` and `GALAXY_URL` supplied
+by the interactive-tool launcher, a Python helper also uploads it to the current
+history. The staged collection is collected after the session ends and is the
+fallback if the live upload fails. Browser downloads remain available.
+
+The launcher installs `galaxy-ie-helpers==0.3.0`. Outside Galaxy the hooks do
+nothing. No credentials are stored in the source or exported results.

@@ -45,7 +45,8 @@ mod_PCA_ui <- function(id){
       ),
       bs4Dash::column(width = 2,
                       getFilterBox(ns, "Perform feature selection", 
-                                    "Tune sparse features within the selected component budget (maximum 15). The 80% cumulative-variance target can require more components than this budget; it is not guaranteed after reduction."),
+                                   "Automatically reduce the dataset by the optimal number of components 
+                                   and the number of features per component."),
       ),
       bs4Dash::column(id = ns("tunedCol"), width = 5,
                        fluidRow(style = "padding-left: 7.5px;",
@@ -180,7 +181,7 @@ observe_pca_ui_components <- function(ns, input, output, dataset, dataSelection,
     classSelection$data <- classes$data[[input$classSelection]]
   })
   
-  observeEvent(list(dataSelection$data, classSelection$data, input$scale, input$ncomp), {
+  observeEvent(dataSelection$data, {
     useTunedVals(FALSE)
     shinyjs::hide("tunedCol")
     shinyjs::hide("Filter.download")
@@ -188,8 +189,6 @@ observe_pca_ui_components <- function(ns, input, output, dataset, dataSelection,
   
   # Observe tune button
   observeEvent(input$tune, {
-    useTunedVals(FALSE)
-    tunedVals$ncomp <- NULL
     tryCatch({
       pca_filterByLoadings(input, output, dataSelection, result, tunedVals, multiDataset, tables)
     
@@ -215,12 +214,7 @@ pca_filterByLoadings <- function(input, output, dataSelection, result, tunedVals
     #get optimal number of components
     error <- tryCatch({
       tune <- mixOmics::tune.pca(dataSelection$data$omicsData, scale = input$scale)
-      # Tune within the user's chosen component budget, not an arbitrary 80%
-      # rule that aborts the bundled example at 16 components.
-      candidates <- which(tune$cum.var > 0.8)
-      ncomp <- min(input$ncomp, if (length(candidates)) min(candidates) else length(tune$cum.var))
-      if (tune$cum.var[ncomp] < 0.8)
-        showNotification(paste("PCA tuning is limited to", ncomp, "selected components; the full-data 80% variance target is not reached. Increase the component budget if appropriate."), type = "warning", duration = NULL)
+      ncomp <- min(which(tune$cum.var > 0.8))
       error <- F
     }, error = function(cond){
       getErrorMessage(cond)
@@ -236,7 +230,7 @@ pca_filterByLoadings <- function(input, output, dataSelection, result, tunedVals
         grid.keepX <- getTestKeepX(ncol(dataSelection$data$omicsData))
         folds <- floor(nrow(dataSelection$data$omicsData)/3)
         
-        BPPARAM <- BiocParallel::SerialParam()
+        BPPARAM <- BiocParallel::SnowParam(workers = max(parallel::detectCores()-1, 2))
         suppressWarnings({
           tune.spca.result <- mixOmics::tune.spca(dataSelection$data$omicsData, ncomp = ncomp,
                                                   test.keepX = grid.keepX, scale = input$scale,
@@ -257,7 +251,7 @@ pca_filterByLoadings <- function(input, output, dataSelection, result, tunedVals
           sel_feature <- c(sel_feature, loadings)
         }
         
-        feature_cols <- (colnames(dataSelection$data$omicsData) %in% sel_feature)
+        feature_cols <- (names(dataSelection$data$omicsData) %in% sel_feature)
         result <- dataSelection$data$omicsData[, feature_cols]
         multiDataset$data[[paste0(dataSelection$name, "_pca_reduced")]] <- list(omicsData = result, name = dataSelection$data$name)
         
@@ -425,7 +419,7 @@ generate_pca_plots <- function(ns, input, output, dataSelection, classSelection,
   
   plot.var <- function(){
     if(!is.null(result())){
-      plotVar(result(), comp.var(), input$var.names, cutoff = input$var.cutoff, cex = input$var.size)
+      plotVar(result(), comp.var(), input$var.names)
     }
   }
   
@@ -472,7 +466,7 @@ generate_pca_plots <- function(ns, input, output, dataSelection, classSelection,
   
   plot.var.tuned <- function(){
     if(!is.null(resultTuned())){
-      plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned, cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
+      plotVar(resultTuned(), comp.var.tuned(), input$var.names.tuned)
     }
   }
   

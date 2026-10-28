@@ -1,9 +1,7 @@
 # Plots
 
-For a complete walkthrough with computed example figures, open **Help → Worked examples**. For the decision flowchart, open **Help → Workflow guide** (also shown on Home). Use **Expand plot** to enlarge a live plot and redraw it at a larger size.
-
 ### Scree plot 
-The scree plot shows the variance explained by each principal component. Use it to understand diminishing returns and the dimensionality of your data; there is no universal rule that components must cover 80% of the variance. Predictive component selection requires appropriate validation rather than a variance threshold alone.
+The scree plot demonstrates the number of explained variance of every "Principal Component". The plot helps to identify the optimal number of components, as the components should cover at least 80% of the data's variance.
 
 ### Sample plot
 The sample plot shows the the samples as points in the 2D space spanned by the selected components. It enables the user to get an impression on how the data are clustered. For more information please have a look at the documentation of mixOmics, specifically at <a class='mixOmics-link' href="https://mixomics.org/graphics/plotindiv/" rel="noreferrer noopener" target="_blank">plotIndiv() – Sample plot</a>.
@@ -16,7 +14,6 @@ The loadings bar plot shows the contribution of (every) feature to the calculati
 
 ### Selected features table
 The table with the selected features shows the numerical contribution of each features to the selected component.
-These are model-selected features, **not statistically significant features**. Sparse methods retain non-zero loadings; ordinary dense fits may retain all features. DA tests and FDR are shown separately in DA / statistics and the Multi-omics DA overview.
 For more information please have a look at <a class='mixOmics-link' href="https://rdrr.io/cran/mixOmics/man/selectVar.html" rel="noreferrer noopener" target="_blank">selectVar: Output of selected features</a>.
 
 ### Clustered image map
@@ -32,8 +29,8 @@ For more information please have a look at <a class='mixOmics-link' href="https:
 
 ### Circos plot
 The circos plot visualises the correlations between the different features of the selected datasets. For more information please have a look at <a class='mixOmics-link' href="https://mixomics.org/graphics/circos/" rel="noreferrer noopener" target="_blank">circosPlot() – Circos plot</a>. 
-The cutoff is an association threshold, not a p-value or FDR threshold. Links do not establish causality. DA significance is not currently overlaid on Circos.
 
 ### Relevance network graph
 The relevance network graph visualises the same correlations between the different features of the selected datasets as the circos plot. Additionally, the network is interactive, so the user can focus on specific features (nodes) and interact with them. For more information about the calculation of the network please have a look at <a class='mixOmics-link' href="https://mixomics.org/graphics/network/" rel="noreferrer noopener" target="_blank">network() – Relevance Network Graph</a>.
+
 

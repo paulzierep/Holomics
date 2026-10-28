@@ -19,19 +19,6 @@ mod_Upload_ui <- function(id){
              )
     ),
     tags$hr(),
-    tags$hr(),
-    fluidRow(
-      bs4Dash::column(width = 12,
-                      bs4Dash::box(title = "Load example data", width = 12, collapsed = FALSE,
-                                   actionButton(ns("load_example_all"), "Continuous example"),
-                                   actionButton(ns("load_example_counts"), "Raw counts example"),
-                                   actionButton(ns("load_example_relative"), "Relative abundance example"),
-                                   helpText("Each example loads three distinct synthetic blocks and matching sample metadata. Re-loading replaces blocks with the same example names, not your other data. Metadata is shared across analyses."),
-                                   helpText("Choose the data type appropriate for your analysis. Counts are for DESeq2/edgeR/ANCOM-BC2; continuous/transformed for limma/linear models; relative for compositional approaches.")
-                      )
-      )
-    ),
-    tags$hr(),
     fluidRow(
       bs4Dash::column(width = 5, style = "margin-left: 1rem",
                       awesomeRadio(ns("type"), "Data type", inline = TRUE,
@@ -48,7 +35,7 @@ mod_Upload_ui <- function(id){
 #' upload Server Functions
 #'
 #' @noRd 
-mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiClasses, tables, metadata = NULL){
+mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiClasses, tables){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
@@ -326,79 +313,6 @@ mod_Upload_server <- function(id, singleData, singleClasses, multiData, multiCla
         tables$classes <- removeRowsFromMatrix(tables$classes, selRows, initClassMatrix)
       }
     })
-
-    observeEvent(input$viewSelectedData, {
-      if (is.null(input$dataTable_rows_selected)) return()
-      selRow <- as.numeric(input$dataTable_rows_selected)[1]
-      name <- as.character(tables$data[selRow, 1])
-      dat <- NULL
-      if (!is.null(singleData$data[[name]])) dat <- singleData$data[[name]]$omicsData
-      else if (!is.null(multiData$data[[name]])) dat <- multiData$data[[name]]$omicsData
-      if (is.null(dat)) return()
-      show <- dat
-      if (nrow(show) > 50) show <- show[1:50, , drop = FALSE]
-      if (ncol(show) > 20) show <- show[, 1:20, drop = FALSE]
-      output$dataViewer <- renderUI({
-        tagList(
-          h4(paste("Preview:", name, "- showing first 50 samples and first 20 features (if larger)")),
-          DT::renderDataTable(DT::datatable(data.frame(sample_id = rownames(show), show, check.names = FALSE), options = list(scrollX = TRUE)))
-        )
-      })
-    })
-
-    upload_example_omics <- function(type = "continuous") {
-      directory <- system.file("extdata", "three-omics", package = "Holomics")
-      names_list <- c("transcriptomics", "proteomics", "metabolomics")
-      files <- paste0(names_list, ".tsv")
-      if (type != "continuous") files <- file.path(type, files)
-      for (i in seq_along(names_list)) {
-        data <- galaxy_read_table(file.path(directory, files[i]))
-        block_name <- paste0("Example_", type, "_", names_list[i])
-        if (!is.null(tables$data) && nrow(tables$data)) {
-          tables$data <- tables$data[tables$data[, 1] != block_name, , drop = FALSE]
-        }
-        if (!is.null(singleData)) singleData$data[[block_name]] <- list(omicsData = data, name = block_name)
-        if (!is.null(multiData)) multiData$data[[block_name]] <- list(omicsData = data, name = block_name)
-        tables$data <- extendDataTable(tables$data, block_name, basename(files[i]), nrow(data), ncol(data), FALSE, "both", block_name)
-      }
-    }
-
-    upload_example_labels <- function() {
-      directory <- system.file("extdata", "three-omics", package = "Holomics")
-      df_classes <- galaxy_read_table(file.path(directory, "metadata.tsv"))[, "Group", drop = FALSE]
-      classes <- data.frame(sample = rownames(df_classes), class = as.character(df_classes[[1]]), stringsAsFactors = FALSE)
-      names(classes)[2] <- names(df_classes)[1]
-      label_name <- "Metadata labels"
-      if (!is.null(singleClasses)) singleClasses$data[[label_name]] <- classes
-      if (!is.null(multiClasses)) multiClasses$data[[label_name]] <- classes
-      existing <- if (!is.null(tables$classes)) as.character(tables$classes[, 1]) else character()
-      if (label_name %in% existing) {
-        idx <- which(tables$classes[, 1] == label_name)
-        tables$classes <- removeRowsFromMatrix(tables$classes, idx, initClassMatrix)
-      }
-      tables$classes <- extendClassTable(tables$classes, label_name, "labels.tsv", nrow(classes), FALSE)
-    }
-
-    upload_example_metadata <- function(metadata) {
-      if (is.null(metadata)) return(invisible(NULL))
-      directory <- system.file("extdata", "three-omics", package = "Holomics")
-      metadata$data <- galaxy_read_table(file.path(directory, "metadata.tsv"))
-      metadata$references <- list(Group = "Control")
-      invisible(NULL)
-    }
-
-    observeEvent(input$load_example_counts, {
-      tryCatch({ upload_example_omics("counts"); upload_example_labels(); upload_example_metadata(metadata) }, error = function(e) getShinyErrorAlert(paste("Example counts load failed:", conditionMessage(e))))
-    })
-    observeEvent(input$load_example_relative, {
-      tryCatch({ upload_example_omics("relative"); upload_example_labels(); upload_example_metadata(metadata) }, error = function(e) getShinyErrorAlert(paste("Example relative load failed:", conditionMessage(e))))
-    })
-    observeEvent(input$load_example_all, {
-      tryCatch({
-        upload_example_omics("continuous")
-        upload_example_labels()
-        upload_example_metadata(metadata)
-      }, error = function(e) getShinyErrorAlert(paste("All example data load failed:", conditionMessage(e))))
-    })
   })
 }
+

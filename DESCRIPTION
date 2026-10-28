@@ -27,8 +27,6 @@ Depends:
     R (>= 4.0)
 biocViews:
 Imports:
-    jsonlite,
-    markdown,
     bs4Dash (>= 2.0.2),
     config,
     dplyr,
@@ -50,14 +48,6 @@ Imports:
     mixOmics,
     BiocParallel
 Suggests:
-    limma,
-    edgeR,
-    DESeq2,
-    sva,
-    lmerTest,
-    maaslin3,
-    mirai (>= 2.5.0),
-    ANCOMBC,
     bookdown,
     knitr,
     rmarkdown,

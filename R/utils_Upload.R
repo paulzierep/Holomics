@@ -124,11 +124,9 @@ getDataTable <- function(ns){
                         DT::dataTableOutput(ns("dataTable"))
                       ),
                       fluidRow(style = "margin-top: .5rem",
-                        actionButton(ns("viewSelectedData"), "View selected dataset"),
                         actionButton(ns("deleteAllData"), "Delete all"),
                         actionButton(ns("deleteSelectedData"), "Delete selected datasets")
-                      ),
-                      uiOutput(ns("dataViewer"))
+                      )
       )
     )
   )

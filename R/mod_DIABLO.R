@@ -133,7 +133,6 @@ mod_DIABLO_server <- function(id, data, classes){
 #' Render Ui components
 #' @noRd
 render_diablo_ui_components <- function(ns, input, output, dataSelection, tunedVals, nodes, nodesTuned){
-  render_circos_components(ns, input, output, tunedVals)
   renderIndivComps(ns, input, output, TRUE, tunedVals)
 
   renderVarComps(ns, input, output, TRUE, tunedVals)
@@ -144,22 +143,22 @@ render_diablo_ui_components <- function(ns, input, output, dataSelection, tunedV
   
   renderImgComp(ns, input, output, TRUE, tunedVals)
   
-  output$diablo.comp.ui <- renderUI({
+  output$diablo.comp <- renderUI({
     selectInput(ns("diablo.comp"), "Component:", seq(1, input$ncomp, 1))
   })
   
-  output$nodes.ui <- renderUI({
+  output$nodes <- renderUI({
     req(nodes$data)
     selectInput(ns("nodeNames"), "Select a node", 
                 choices = c("---" = "null", combineLists(nodes$data["label"], nodes$data["id"])))
   })
   
   #tuned
-  output$diablo.comp.ui.tuned <- renderUI({
+  output$diablo.comp.tuned <- renderUI({
     selectizeInput(ns("diablo.comp.tuned"), "Component:", seq(1, tunedVals$ncomp, 1))
   })
   
-  output$nodes.ui.tuned <- renderUI({
+  output$nodes.tuned <- renderUI({
     req(nodesTuned$data)
     selectizeInput(ns("nodeNames.tuned"), "Select a node", 
                    choices = c("---" = "null", combineLists(nodesTuned$data["label"], nodesTuned$data["id"])))
@@ -211,11 +210,6 @@ observe_diablo_ui_components <- function(ns, session, input, output, data, dataS
   
   observeEvent(input$classSelection, {
     classSelection$data <- classes$data[[input$classSelection]]
-  })
-
-  observeEvent(list(classSelection$data, input$scale, input$ncomp, input$matrix), {
-    useTunedVals(FALSE)
-    shinyjs::hide("tunedCol")
   })
   
   #Observe data change
@@ -278,8 +272,6 @@ observe_diablo_ui_components <- function(ns, session, input, output, data, dataS
   
   # Observe tune button
   observeEvent(input$tune, {
-    useTunedVals(FALSE)
-    tunedVals$ncomp <- NULL
     if (!is.null(input$dataSelection)){
       tryCatch({
         tune_diablo_values(dataSelection, classSelection, result, tunedVals, input, output)
@@ -374,7 +366,7 @@ tune_diablo_values <- function(dataSelection, classSelection, result, tunedVals,
           test.keepX[[i]] = getTestKeepX(ncol(dataSelection$data[[i]]))
         }
         
-        BPPARAM <- BiocParallel::SerialParam()
+        BPPARAM <- BiocParallel::SnowParam(workers = parallel::detectCores()-1)
         tune.diablo = mixOmics::tune.block.splsda(X, Y, ncomp = ncomp, scale = input$scale,
                                                   test.keepX = test.keepX, design = design,
                                                   validation = 'Mfold', folds = getFolds(Y), nrepeat = 1,
@@ -469,7 +461,6 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   # Create reactive values
   comp.indiv <- getCompIndivReactive(input)
   comp.var <- getCompVarReactive(input)
-  comp.img <- getCompImgReactive(input)
 
   comp.diablo <- reactive({
     req(input$diablo.comp)
@@ -515,8 +506,7 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   plot.var <- function(){
     if(!is.null(result()) & input$ncomp >= 2){
       plotVar(result(), comp.var(), input$var.names,
-              pch = seq(1, length(dataSelection$data), 1), legend = TRUE,
-              cutoff = input$var.cutoff, cex = input$var.size)
+              pch = seq(1, length(dataSelection$data), 1), legend = TRUE)
     }
   }
   
@@ -536,13 +526,11 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
     if(!is.null(result()) & length(dataSelection$data) > 1){
       if (ncol(classSelection$data) == 3){
         colors = getGroupColors(classSelection$data)
-        mixOmics::cimDiablo(result(), comp = comp.img(), margins=c(input$xmargin, input$ymargin),
-                            row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
+        mixOmics::cimDiablo(result(), comp = 1, margin=c(input$xmargin, input$ymargin),
                             legend.position = "right", size.legend = 1,
                             color.Y = colors, trim = F)
       } else {
-        mixOmics::cimDiablo(result(), comp = comp.img(), margins=c(input$xmargin, input$ymargin),
-                            row.names = input$heatmap.rows, col.names = input$heatmap.columns, transpose = input$heatmap.transpose,
+        mixOmics::cimDiablo(result(), comp = 1, margin=c(input$xmargin, input$ymargin),
                             legend.position = "right",
                             size.legend = 1, trim = F)
       }
@@ -592,13 +580,10 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
         colors = getGroupColors(classSelection$data)
         mixOmics::circosPlot(result(), cutoff = input$cutoffCircos, line = input$showLine, legend.title = title,
                              size.labels = input$datasetSizeCircos, size.variables = input$featureSizeCircos,
-                              color.Y = colors, comp = as.numeric(input$circos.components),
-                              showIntraLinks = input$circos.intra, linkWidth = input$circos.linkwidth)
+                             color.Y = colors)
       } else {
         mixOmics::circosPlot(result(), cutoff = input$cutoffCircos, line = input$showLine, legend.title = title,
-                              size.labels = input$datasetSizeCircos, size.variables = input$featureSizeCircos,
-                              comp = as.numeric(input$circos.components), showIntraLinks = input$circos.intra,
-                              linkWidth = input$circos.linkwidth)
+                             size.labels = input$datasetSizeCircos, size.variables = input$featureSizeCircos)      
       }
     }
   }
@@ -624,8 +609,7 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   plot.var.tuned <- function(){
     if(!is.null(result.tuned()) & tunedVals$ncomp >= 2){
       plotVar(result.tuned(), comp.var.tuned(), input$var.names.tuned,
-              pch = seq(1, length(dataSelection$data), 1), legend = TRUE,
-              cutoff = input$var.cutoff.tuned, cex = input$var.size.tuned)
+              pch = seq(1, length(dataSelection$data), 1), legend = TRUE)
     }
   }
   
@@ -644,18 +628,16 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
   
   plot.img.tuned <- function(){
     if(!is.null(result.tuned()) & length(dataSelection$data) > 1){
-      components <- checkCompNcompCombination(result.tuned()$ncomp, comp.img.tuned())
+      comp.img.tuned <- checkCompNcompCombination(result.tuned()$ncomp, comp.img.tuned())
       if (ncol(classSelection$data) == 3){
         colors = getGroupColors(classSelection$data)
-        mixOmics::cimDiablo(result.tuned(), comp = components,
-                            margins=c(input$xmargin.tuned, input$ymargin.tuned),
-                            row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
+        mixOmics::cimDiablo(result.tuned(), comp = comp.img.tuned, 
+                            margin=c(input$xmargin.tuned, input$ymargin.tuned), 
                             legend.position = "right",
                             size.legend = 1, color.Y = colors, trim = F)
       } else {
-        mixOmics::cimDiablo(result.tuned(), comp = components,
-                            margins=c(input$xmargin.tuned, input$ymargin.tuned),
-                            row.names = input$heatmap.rows.tuned, col.names = input$heatmap.columns.tuned, transpose = input$heatmap.transpose.tuned,
+        mixOmics::cimDiablo(result.tuned(), comp = comp.img.tuned,
+                            margin=c(input$xmargin.tuned, input$ymargin.tuned), 
                             legend.position = "right",
                             size.legend = 1, trim = F)
       }
@@ -706,13 +688,10 @@ generate_diablo_plots <- function(ns, input, output, dataSelection, classSelecti
         colors = getGroupColors(classSelection$data)
         mixOmics::circosPlot(result.tuned(), cutoff = input$cutoffCircos.tuned, line = input$showLine.tuned, legend.title = title,
                              size.labels = input$datasetSizeCircos.tuned, size.variables = input$featureSizeCircos.tuned,
-                              color.Y = colors, comp = as.numeric(input$circos.components.tuned),
-                              showIntraLinks = input$circos.intra.tuned, linkWidth = input$circos.linkwidth.tuned)
+                             color.Y = colors)
       } else {
         mixOmics::circosPlot(result.tuned(), cutoff = input$cutoffCircos.tuned, line = input$showLine.tuned, legend.title = title, 
-                              size.labels = input$datasetSizeCircos.tuned, size.variables = input$featureSizeCircos.tuned,
-                              comp = as.numeric(input$circos.components.tuned), showIntraLinks = input$circos.intra.tuned,
-                              linkWidth = input$circos.linkwidth.tuned)
+                             size.labels = input$datasetSizeCircos.tuned, size.variables = input$featureSizeCircos.tuned)
       }
     }
   }
