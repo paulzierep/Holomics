@@ -24,6 +24,13 @@ or an endorsement by its original authors. The application is named
 **OmicsHarbor**; the internal R package remains **`Holomics`** for compatibility.
 CRAN's Holomics release does **not** contain these fork-specific additions.
 
+![OmicsHarbor illustrated introduction with the actual app logo, PCA interface and DIABLO Circos output](docs/images/omicsharbor-comic.png)
+
+*Illustrated introduction featuring real OmicsHarbor screenshots and the app's
+harbour logo. Plots use the built-in synthetic examples, not study results.*
+
+[View the full-size app screenshot](docs/images/omicsharbor-pca.png).
+
 ## What's in this fork?
 
 | Area | Capabilities |
